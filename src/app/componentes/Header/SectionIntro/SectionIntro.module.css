@@ -1,23 +1,22 @@
-
 .wrapper {
-    margin-bottom: 26px;
+    margin-bottom: 1.625rem;
 }
 
 .greeting {
-    font-size: 13px;
-    color: #888780;
-    margin-bottom: 10px;
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    margin: 0;
 }
 
 .title {
-    font-family: var(--font-title), sans-serif;
-    font-size: 24px;
+    font-family: var(--font-title);
+    font-size: 1.5rem;
     font-weight: 700;
-    color: #2C2C2A;
+    color: var(--color-text);
     letter-spacing: -0.5px;
     margin: 0;
 }
 
 .highlight {
-    color: #534AB7;
+    color: var(--color-brand);
 }

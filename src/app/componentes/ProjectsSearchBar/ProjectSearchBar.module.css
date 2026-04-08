@@ -2,15 +2,16 @@
 
 .wrapper {
     position: relative;
-    width: 100%;
+    flex: 1;
+    min-width: 10rem;
 }
 
 .icon {
     position: absolute;
-    left: 11px;
+    left: 0.6875rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #B4B2A9;
+    color: var(--color-text-placeholder);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -20,21 +21,21 @@
 .input {
     width: 100%;
     box-sizing: border-box;
-    background: #ffffff;
-    border: 1px solid #E8E7E3;
-    border-radius: 8px;
-    padding: 7px 11px 7px 33px;
-    font-family: var(--font-body), sans-serif;
-    font-size: 13px;
-    color: #2C2C2A;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.4375rem 0.6875rem 0.4375rem 2.0625rem;
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    color: var(--color-text);
     outline: none;
     transition: border-color 0.15s;
-    }
+}
 
 .input::placeholder {
-    color: #B4B2A9;
+    color: var(--color-text-placeholder);
 }
 
 .input:focus {
-    border-color: #534AB7;
+    border-color: var(--color-brand);
 }

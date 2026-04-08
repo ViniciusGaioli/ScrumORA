@@ -1,0 +1,50 @@
+:root {
+    /* Fonts */
+    --font-title: 'Plus Jakarta Sans', sans-serif;
+    --font-body:  'Geist', sans-serif;
+
+    /* Brand */
+    --color-brand:        #534AB7;
+    --color-brand-dark:   #3C3489;
+    --color-brand-light:  #EEEDFE;
+    --color-brand-border: #AFA9EC;
+
+    /* Neutrals */
+    --color-bg:           #F5F4F1;
+    --color-surface:      #ffffff;
+    --color-border:       #E8E7E3;
+    --color-border-hover: #D3D1C7;
+    --color-muted-bg:     #F1EFE8;
+
+    /* Text */
+    --color-text:         #2C2C2A;
+    --color-text-sub:     #5F5E5A;
+    --color-text-muted:   #888780;
+    --color-text-subtle:  #444441;
+    --color-text-placeholder: #B4B2A9;
+
+    /* Role: Scrum Master (brand) */
+    --color-role-sm-text: #534AB7;
+    --color-role-sm-bg:   #EEEDFE;
+
+    /* Role: Product Owner (green) */
+    --color-role-po-text: #27500A;
+    --color-role-po-bg:   #EAF3DE;
+    --color-role-po-accent: #3B6D11;
+
+    /* Role: Member (orange) */
+    --color-role-int-text: #633806;
+    --color-role-int-bg:   #FAEEDA;
+    --color-role-int-accent: #854F0B;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-body);
+    color: var(--color-text);
+    background: var(--color-bg);
+}
