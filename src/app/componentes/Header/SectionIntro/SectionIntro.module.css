@@ -1,0 +1,23 @@
+
+.wrapper {
+    margin-bottom: 26px;
+}
+
+.greeting {
+    font-size: 13px;
+    color: #888780;
+    margin-bottom: 10px;
+}
+
+.title {
+    font-family: var(--font-title), sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #2C2C2A;
+    letter-spacing: -0.5px;
+    margin: 0;
+}
+
+.highlight {
+    color: #534AB7;
+}

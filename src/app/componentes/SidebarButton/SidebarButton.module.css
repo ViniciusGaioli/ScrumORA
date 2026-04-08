@@ -1,0 +1,17 @@
+.button {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15, color 0.15s;
+}
+
+.icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+}

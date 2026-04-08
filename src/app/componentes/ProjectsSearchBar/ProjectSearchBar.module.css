@@ -1,0 +1,40 @@
+/* src/components/searchBar/SearchBar.module.css */
+
+.wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.icon {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #B4B2A9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.input {
+    width: 100%;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1px solid #E8E7E3;
+    border-radius: 8px;
+    padding: 7px 11px 7px 33px;
+    font-family: var(--font-body), sans-serif;
+    font-size: 13px;
+    color: #2C2C2A;
+    outline: none;
+    transition: border-color 0.15s;
+    }
+
+.input::placeholder {
+    color: #B4B2A9;
+}
+
+.input:focus {
+    border-color: #534AB7;
+}

@@ -1,0 +1,61 @@
+/* src/components/header/Header.module.css */
+
+.header {
+    height: 54px;
+    background: #ffffff;
+    border-bottom: 1px solid #E8E7E3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    flex-shrink: 0;
+}
+
+.title {
+    font-family: var(--font-title), sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #2C2C2A;
+    letter-spacing: -0.2px;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btnGhost,
+.btnPrimary {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 13px;
+    border-radius: 8px;
+    font-family: var(--font-body), sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    border: none;
+}
+
+.btnGhost {
+    background: #ffffff;
+    color: #5F5E5A;
+    border: 1px solid #E8E7E3;
+}
+
+.btnGhost:hover {
+    background: #F5F4F1;
+    border-color: #D3D1C7;
+}
+
+.btnPrimary {
+    background: #534AB7;
+    color: #ffffff;
+}
+
+.btnPrimary:hover {
+    background: #3C3489;
+}

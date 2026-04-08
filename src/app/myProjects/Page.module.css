@@ -1,0 +1,33 @@
+.page {
+    display: flex;
+    height: 100vh;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.statsRow {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.searchRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.main {
+    flex: 1;
+    background: #F5F4F1;
+    padding: 28px 32px;
+}
