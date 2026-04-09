@@ -11,7 +11,7 @@ interface SidebarButtonProps {
 
 export function SidebarButton({icon, label, active = false, onClick}: SidebarButtonProps) {
     return (
-        <button className={`${style.button}`} style={{background: active ? '#EEEDFE' : 'transparent', color: active ? '#534AB7' : '#888780',} } onClick={onClick} title={label} aria-label={label}>
+        <button className={`${style.button} ${active ? style.active : ''}`} onClick={onClick} title={label} aria-label={label}>
             <span className={`${style.icon}`}>{icon}</span>
         </button>
     );

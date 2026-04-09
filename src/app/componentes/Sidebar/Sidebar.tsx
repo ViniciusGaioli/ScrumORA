@@ -2,6 +2,7 @@
 "use client";
 
 import { SidebarButton } from '../SidebarButton/SidebarButton';
+import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 import styles from './Sidebar.module.css';
 import BellIcon from '../../assets/BellIcon/BellIcon';
 import ProjectsIcon from '../../assets/ProjectsIcon/ProjectsIcon';
@@ -39,6 +40,7 @@ export function Sidebar({activePage = 'projects', userInitials = 'VG', onNavigat
             </nav>
 
             <div className={styles.bottom}>
+                <ThemeToggle />
                 <SidebarButton
                 icon={<LeaveIcon />}
                 label="Sair"

@@ -8,6 +8,18 @@
     align-items: center;
     justify-content: center;
     transition: background 0.15s, color 0.15s;
+    background: transparent;
+    color: var(--color-text-muted);
+}
+
+.button.active {
+    background: var(--color-brand-light);
+    color: var(--color-role-sm-text);
+}
+
+.button:not(.active):hover {
+    background: var(--color-muted-bg);
+    color: var(--color-text-subtle);
 }
 
 .icon {

@@ -6,7 +6,7 @@
     border-radius: 0.875rem;
     padding: 1rem 1.125rem;
     cursor: pointer;
-    transition: border-color 0.15s, transform 0.15s;
+    transition: border-color 0.15s, background 0.15s, transform 0.15s;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -14,8 +14,9 @@
 }
 
 .card:hover {
-    border-color: var(--color-border-hover);
-    transform: translateY(-1px);
+    border-color: var(--color-brand-border);
+    background: var(--color-brand-light);
+    transform: translateY(-2px);
 }
 
 .accentBar {
