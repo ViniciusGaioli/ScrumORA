@@ -1,7 +1,7 @@
 "use client";
 
 import styles from './ProjectSearchBar.module.css';
-import SearchIcon from '../../assets/SearchIcon/SearchIcon';
+import SearchIcon from '@/src/assets/icons/SearchIcon/SearchIcon';
 
 
 

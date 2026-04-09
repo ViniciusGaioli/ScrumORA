@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from 'react';
 import styles from './ThemeToggle.module.css';
-import SunIcon from '../../assets/SunIcon/SunIcon';
-import MoonIcon from '../../assets/MoonIcon/MoonIcon';
+import SunIcon from '@/src/assets/icons/SunIcon/SunIcon';
+import MoonIcon from '@/src/assets/icons/MoonIcon/MoonIcon';
 
 type Theme = 'light' | 'dark';
 

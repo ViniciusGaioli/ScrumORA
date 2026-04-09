@@ -4,10 +4,10 @@
 import { SidebarButton } from '../SidebarButton/SidebarButton';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 import styles from './Sidebar.module.css';
-import BellIcon from '../../assets/BellIcon/BellIcon';
-import ProjectsIcon from '../../assets/ProjectsIcon/ProjectsIcon';
-import SettingsIcon from '../../assets/SettingIcon/SettingsIcon';
-import LeaveIcon from '../../assets/LeaveIcon/LeaveIcon';
+import BellIcon from '@/src/assets/icons/BellIcon/BellIcon';
+import ProjectsIcon from '@/src/assets/icons/ProjectsIcon/ProjectsIcon';
+import SettingsIcon from '@/src/assets/icons/SettingIcon/SettingsIcon';
+import LeaveIcon from '@/src/assets/icons/LeaveIcon/LeaveIcon';
 
 type ActivePage = 'projects' | 'notifications' | 'settings';
 

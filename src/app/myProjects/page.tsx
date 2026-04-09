@@ -1,13 +1,13 @@
 "use client";
 import styles from "./Page.module.css"
-import { Sidebar } from "../componentes/Sidebar/Sidebar";
-import { Header } from "../componentes/Header/Header";
-import { StatCard } from "../componentes/StatCard/StatCard";
-import { SectionIntro } from "../componentes/Header/SectionIntro/SectionIntro";
-import { ProjectSearchBar } from "../componentes/ProjectsSearchBar/ProjectSearchBar";
-import { FilterChipGroup } from "../componentes/FilterChipGroup/FilterChipGroup";
-import { ProjectCard } from "../componentes/ProjectCard/ProjectCard";
-import { ProjectCardGroup } from "../componentes/ProjectCardGroup/ProjectCardGroup";
+import { Sidebar } from "../components/Sidebar/Sidebar";
+import { Header } from "../components/Header/Header";
+import { SectionIntro } from "../components/Header/SectionIntro/SectionIntro";
+import { StatCard } from "./_components/StatCard/StatCard";
+import { ProjectSearchBar } from "./_components/ProjectsSearchBar/ProjectSearchBar";
+import { FilterChipGroup } from "./_components/FilterChipGroup/FilterChipGroup";
+import { ProjectCard } from "./_components/ProjectCard/ProjectCard";
+import { ProjectCardGroup } from "./_components/ProjectCardGroup/ProjectCardGroup";
 import { Project } from "@/src/types/project";
 
 import { useState } from "react";
