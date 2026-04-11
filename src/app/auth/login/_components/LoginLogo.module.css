@@ -1,0 +1,29 @@
+.wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mark {
+    width: 36px;
+    height: 36px;
+    background: var(--color-brand);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-title);
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.3px;
+    flex-shrink: 0;
+}
+
+.name {
+    font-family: var(--font-title);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.3px;
+}

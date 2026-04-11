@@ -1,13 +1,18 @@
 // src/components/sidebar/Sidebar.tsx
 "use client";
 
-import { SidebarButton } from '../SidebarButton/SidebarButton';
-import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
+import dynamic from 'next/dynamic';
 import styles from './Sidebar.module.css';
+import { SidebarButton } from '../SidebarButton/SidebarButton';
 import BellIcon from '@/src/assets/icons/BellIcon/BellIcon';
 import ProjectsIcon from '@/src/assets/icons/ProjectsIcon/ProjectsIcon';
 import SettingsIcon from '@/src/assets/icons/SettingIcon/SettingsIcon';
 import LeaveIcon from '@/src/assets/icons/LeaveIcon/LeaveIcon';
+
+const ThemeToggle = dynamic(
+    () => import('../ThemeToggle/ThemeToggle').then(m => ({ default: m.ThemeToggle })),
+    { ssr: false }
+);
 
 type ActivePage = 'projects' | 'notifications' | 'settings';
 

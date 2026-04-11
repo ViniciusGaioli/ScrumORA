@@ -103,7 +103,6 @@ export default function myProjects() {
     ];
     return (
         <div className={styles.page}>
-            <Sidebar activePage="projects" userInitials="VG" onNavigate={(page) => console.log(page)} onLogout={() => console.log('logout')}/>
             <div className={styles.content}>
                 <Header title="Meus projetos" onSearch={() => console.log('buscar')} onNewProject={() => console.log('novo projeto')}/>
                 <main className={styles.main}>
