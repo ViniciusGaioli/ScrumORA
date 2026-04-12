@@ -1,0 +1,121 @@
+.wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    margin-bottom: 24px;
+}
+
+.title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #2C2C2A;
+    letter-spacing: -0.4px;
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: #888780;
+}
+
+.errorBanner {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 12px;
+    background: #FCEBEB;
+    border: 1px solid #F7C1C1;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #791F1F;
+    margin-bottom: 14px;
+}
+
+.fields {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 8px;
+}
+
+.forgot {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Geist', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #534AB7;
+    text-align: right;
+    padding: 0;
+    margin-bottom: 16px;
+    align-self: flex-end;
+}
+
+.forgot:hover {
+    text-decoration: underline;
+}
+
+.btnPrimary {
+    width: 100%;
+    padding: 10px;
+    background: #534AB7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Geist', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 14px;
+}
+
+.btnPrimary:hover {
+    background: #3C3489;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.dividerLine {
+    flex: 1;
+    height: 1px;
+    background: #E8E7E3;
+}
+
+.dividerText {
+    font-size: 11px;
+    color: #B4B2A9;
+    white-space: nowrap;
+}
+
+.footer {
+    text-align: center;
+    font-size: 13px;
+    color: #888780;
+    margin-top: 24px;
+}
+
+.footerLink {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #534AB7;
+    padding: 0;
+}
+
+.footerLink:hover {
+    text-decoration: underline;
+}

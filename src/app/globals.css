@@ -37,6 +37,15 @@
     --color-role-int-text: #633806;
     --color-role-int-bg:   #FAEEDA;
     --color-role-int-accent: #854F0B;
+
+    /* Login page (always light, theme-independent) */
+    --color-login-form-bg:      #F5F4F1;
+    --color-login-card-bg:      #ffffff;
+    --color-login-card-border:  #E8E7E3;
+    --color-login-logo-text:    #ffffff;
+    --color-tagline-title:      #ffffff;
+    --color-tagline-highlight:  #AFA9EC;
+    --color-tagline-subtitle:   rgba(255, 255, 255, 0.6);
 }
 
 @media (prefers-color-scheme: dark) {

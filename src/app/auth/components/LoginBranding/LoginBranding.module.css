@@ -1,0 +1,23 @@
+
+.wrapper {
+    background: #534AB7;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+}
+
+.pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.06;
+    background-image:
+        repeating-linear-gradient(0deg, #fff 0px, #fff 1px, transparent 1px, transparent 40px),
+        repeating-linear-gradient(90deg, #fff 0px, #fff 1px, transparent 1px, transparent 40px);
+    pointer-events: none;
+}

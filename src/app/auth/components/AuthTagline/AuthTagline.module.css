@@ -1,0 +1,25 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--color-tagline-title);
+    line-height: 1.2;
+    letter-spacing: -1px;
+}
+
+.highlight {
+    color: var(--color-tagline-highlight);
+}
+
+.subtitle {
+    font-size: 14px;
+    color: var(--color-tagline-subtitle);
+    line-height: 1.6;
+    max-width: 380px;
+}

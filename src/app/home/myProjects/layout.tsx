@@ -1,11 +1,12 @@
 "use client";
 import { Sidebar } from "../components/Sidebar/Sidebar";
+import styles from "./AppLayout.module.css";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div style={{ display: 'flex' }}>
+        <div className={styles.wrapper}>
             <Sidebar />
-            <main>{children}</main>
+            <main className={styles.main}>{children}</main>
         </div>
     );
 }

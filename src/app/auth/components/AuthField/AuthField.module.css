@@ -1,0 +1,45 @@
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #5F5E5A;
+}
+
+.input {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #E8E7E3;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    color: #2C2C2A;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.input::placeholder {
+    color: #B4B2A9;
+}
+
+.input:focus {
+    border-color: #534AB7;
+}
+
+.inputError {
+    border-color: #E24B4A;
+}
+
+.inputError:focus {
+    border-color: #E24B4A;
+}
+
+.error {
+    font-size: 11px;
+    color: #A32D2D;
+}

@@ -1,6 +1,9 @@
 .page {
     display: flex;
-    height: 100vh;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
 }
 
 .content {

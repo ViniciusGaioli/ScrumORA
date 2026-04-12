@@ -1,6 +1,6 @@
-import styles from "./LoginLogo.module.css"
+import styles from './AuthLogo.module.css';
 
-export function LoginLogo() {
+export function AuthLogo() {
     return (
         <div className={styles.wrapper}>
         <div className={styles.mark}>SO</div>

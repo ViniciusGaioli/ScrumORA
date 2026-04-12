@@ -1,0 +1,22 @@
+.btn {
+    width: 100%;
+    padding: 9px;
+    background: #ffffff;
+    color: #2C2C2A;
+    border: 1px solid #E8E7E3;
+    border-radius: 8px;
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn:hover {
+    background: #F5F4F1;
+    border-color: #D3D1C7;
+}

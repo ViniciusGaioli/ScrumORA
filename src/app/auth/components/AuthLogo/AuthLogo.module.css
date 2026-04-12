@@ -24,6 +24,6 @@
     font-family: var(--font-title);
     font-size: 18px;
     font-weight: 700;
-    color: var(--color-text);
+    color: var(--color-login-logo-text);
     letter-spacing: -0.3px;
 }
