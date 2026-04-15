@@ -6,7 +6,7 @@ interface PageHeaderProps {
     highlight?: string;
 }
 
-export function SectionIntro({greeting, title, highlight,}: PageHeaderProps) {
+export function SectionIntro({ greeting, title, highlight }: PageHeaderProps) {
     return (
         <div className={styles.wrapper}>
             {greeting && <p className={styles.greeting}>{greeting}</p>}

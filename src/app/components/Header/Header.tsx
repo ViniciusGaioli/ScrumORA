@@ -7,7 +7,7 @@ interface HeaderProps {
     onNewProject?: () => void;
 }
 
-export function Header({title = 'Meus projetos', onSearch, onNewProject,}: HeaderProps) {
+export function Header({ title = 'Meus projetos', onSearch, onNewProject }: HeaderProps) {
     return (
         <header className={styles.header}>
         <span className={styles.title}>{title}</span>

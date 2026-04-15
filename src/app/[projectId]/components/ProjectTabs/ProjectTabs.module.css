@@ -1,0 +1,31 @@
+.nav {
+    height: 44px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    align-items: flex-end;
+    padding: 0 24px;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.tab {
+    padding: 10px 14px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+
+.tab:hover {
+    color: var(--color-text-sub);
+}
+
+.active {
+    color: var(--color-brand);
+    border-bottom-color: var(--color-brand);
+}

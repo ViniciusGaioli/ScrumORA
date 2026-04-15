@@ -1,8 +1,7 @@
 "use client";
 import styles from "./Page.module.css"
-import { Sidebar } from "../components/Sidebar/Sidebar";
-import { Header } from "../components/Header/Header";
-import { SectionIntro } from "../components/Header/SectionIntro/SectionIntro";
+import { Header } from "@/src/app/components/Header/Header";
+import { SectionIntro } from "@/src/app/components/Header/SectionIntro/SectionIntro";
 import { StatCard } from "./_components/StatCard/StatCard";
 import { ProjectSearchBar } from "./_components/ProjectsSearchBar/ProjectSearchBar";
 import { FilterChipGroup } from "./_components/FilterChipGroup/FilterChipGroup";

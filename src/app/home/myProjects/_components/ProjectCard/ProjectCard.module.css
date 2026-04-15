@@ -160,7 +160,7 @@
 
 .progressBar {
     height: 3px;
-    background: var(--color-muted-bg);
+    background: var(--color-bg);
     border-radius: 2px;
     overflow: hidden;
 }

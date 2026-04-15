@@ -18,8 +18,8 @@
 }
 
 .button:not(.active):hover {
-    background: var(--color-muted-bg);
-    color: var(--color-text-subtle);
+    background: var(--color-bg);
+    color: var(--color-text-sub);
 }
 
 .icon {
