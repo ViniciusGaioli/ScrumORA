@@ -9,7 +9,7 @@ const MOCK_ACTIVITIES: Activity[] = [
         startDate: '2025-03-01',
         endDate: '2025-03-10',
         archived: false,
-        sprint: { id: 1, name: 'Sprint 1' },
+        sprint: { id: 1, name: 'Autenticação e onboarding', description: 'Entregar o fluxo completo de login, cadastro e recuperação de senha para liberar o acesso ao MVP.' },
         responsibles: [
             { user: { id: 1, name: 'Vinicius Gaioli', initials: 'VG' } },
             { team: { id: 1, name: 'Backend' } },
@@ -23,7 +23,7 @@ const MOCK_ACTIVITIES: Activity[] = [
         startDate: '2025-03-05',
         endDate: '2025-03-15',
         archived: false,
-        sprint: { id: 1, name: 'Sprint 1' },
+        sprint: { id: 1, name: 'Autenticação e onboarding', description: 'Entregar o fluxo completo de login, cadastro e recuperação de senha para liberar o acesso ao MVP.' },
         responsibles: [
             { user: { id: 2, name: 'Rafael Alves', initials: 'RA' } },
             { team: { id: 2, name: 'Frontend' } },
@@ -37,7 +37,7 @@ const MOCK_ACTIVITIES: Activity[] = [
         startDate: '2025-03-10',
         endDate: '2025-04-20',
         archived: false,
-        sprint: { id: 2, name: 'Sprint 2' },
+        sprint: { id: 2, name: 'Núcleo do produto', description: 'Construir a base de dados, integrações críticas e o painel de métricas iniciais do produto.' },
         responsibles: [
             { team: { id: 1, name: 'Backend' } },
         ],
@@ -50,7 +50,7 @@ const MOCK_ACTIVITIES: Activity[] = [
         startDate: '2025-03-15',
         endDate: '2025-04-01',
         archived: false,
-        sprint: { id: 2, name: 'Sprint 2' },
+        sprint: { id: 2, name: 'Núcleo do produto', description: 'Construir a base de dados, integrações críticas e o painel de métricas iniciais do produto.' },
         responsibles: [
             { user: { id: 1, name: 'Vinicius Gaioli', initials: 'VG' } },
             { user: { id: 3, name: 'Julia Matos', initials: 'JM' } },
@@ -64,7 +64,7 @@ const MOCK_ACTIVITIES: Activity[] = [
         startDate: '2025-03-20',
         endDate: '2025-04-25',
         archived: false,
-        sprint: { id: 2, name: 'Sprint 2' },
+        sprint: { id: 2, name: 'Núcleo do produto', description: 'Construir a base de dados, integrações críticas e o painel de métricas iniciais do produto.' },
         responsibles: [
             { team: { id: 2, name: 'Frontend' } },
             { user: { id: 2, name: 'Rafael Alves', initials: 'RA' } },
@@ -78,7 +78,7 @@ const MOCK_ACTIVITIES: Activity[] = [
         startDate: '2025-04-01',
         endDate: '2025-05-10',
         archived: false,
-        sprint: { id: 3, name: 'Sprint 3' },
+        sprint: { id: 3, name: 'Qualidade e documentação', description: 'Cobrir os fluxos principais com testes de integração e documentar a API para consumidores externos.' },
         responsibles: [
             { team: { id: 1, name: 'Backend' } },
             { team: { id: 2, name: 'Frontend' } },
@@ -92,7 +92,7 @@ const MOCK_ACTIVITIES: Activity[] = [
         startDate: '2025-04-05',
         endDate: '2025-05-15',
         archived: false,
-        sprint: { id: 3, name: 'Sprint 3' },
+        sprint: { id: 3, name: 'Qualidade e documentação', description: 'Cobrir os fluxos principais com testes de integração e documentar a API para consumidores externos.' },
         responsibles: [
             { user: { id: 3, name: 'Julia Matos', initials: 'JM' } },
         ],

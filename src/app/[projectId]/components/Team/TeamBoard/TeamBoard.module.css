@@ -1,0 +1,20 @@
+.board {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    padding: 1.25rem 1.5rem;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3.75rem 1.5rem;
+}
+
+.emptyText {
+    font-size: 0.8125rem;
+    color: var(--color-text-placeholder);
+}

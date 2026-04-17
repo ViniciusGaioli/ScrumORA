@@ -8,6 +8,7 @@ export interface ActivityResponsible {
 export interface ActivitySprint {
     id: number;
     name: string;
+    description?: string;
 }
 
 export interface Activity {

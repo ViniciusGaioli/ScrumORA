@@ -3,13 +3,7 @@
 import styles from './KanbanColumn.module.css';
 import { ActivityCard } from '../ActivityCard/ActivityCard';
 import { Activity, ActivityStatus } from '../ActivityCard/Activity';
-
-const IconPlus = () => (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19"/>
-        <line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-);
+import PlusIcon from '@/src/assets/icons/PlusIcon/PlusIcon';
 
 const STATUS_CONFIG: Record<ActivityStatus, { label: string; color: string; }> = {
     backlog:     { label: 'Backlog',          color: 'var(--color-status-backlog)'     },
@@ -62,8 +56,8 @@ export function KanbanColumn({
                         className={styles.addBtn}
                         onClick={() => onAddActivity?.(status)}
                     >
-                        <IconPlus />
-                        Adicionar
+                        <PlusIcon size={11} />
+                        Criar nova atividade
                     </button>
                 )}
             </div>

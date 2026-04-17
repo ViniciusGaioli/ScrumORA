@@ -36,6 +36,7 @@
     --color-role-int-accent: #854F0B;
 
     /* Avatar identity colors (theme-independent) */
+    --color-avatar-text: #ffffff;
     --color-avatar-1: #534AB7;
     --color-avatar-2: #3B6D11;
     --color-avatar-3: #854F0B;

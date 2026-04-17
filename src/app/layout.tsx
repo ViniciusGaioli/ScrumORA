@@ -15,7 +15,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="pt-BR" className={`${geist.variable} ${plusJakarta.variable}`} suppressHydrationWarning>
-            <body>
+            <body suppressHydrationWarning>
                 <Providers>{children}</Providers>
             </body>
         </html>

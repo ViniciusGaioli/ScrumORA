@@ -45,7 +45,7 @@ export function groupActivities(
 
             const key = String(activity.sprint.id);
             if (!map.has(key)) {
-                map.set(key, { id: key, label: activity.sprint.name, activities: [] });
+                map.set(key, { id: key, label: `Sprint ${activity.sprint.id} - ${activity.sprint.name}`, activities: [] });
             }
             map.get(key)!.activities.push(activity);
         }

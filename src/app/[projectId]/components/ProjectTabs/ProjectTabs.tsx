@@ -5,10 +5,10 @@ import { usePathname } from 'next/navigation';
 import styles from './ProjectTabs.module.css';
 
 const TABS = [
-    { label: 'Atividades',  href: 'atividades'  },
+    { label: 'Atividades',  href: 'activities'  },
     { label: 'Sprints',     href: 'sprints'     },
-    { label: 'Integrantes', href: 'integrantes' },
-    { label: 'Equipes',     href: 'equipes'     },
+    { label: 'Integrantes', href: 'members' },
+    { label: 'Equipes',     href: 'team'     },
     { label: 'Progresso',   href: 'progresso'   },
 ];
 
@@ -26,7 +26,7 @@ export function ProjectTabs({ projectId }: ProjectTabsProps) {
             const active = pathname.startsWith(href);
 
             return (
-            <Link key={tab.href} href={href} className={`${styles.tab} ${active ? styles.active : ''}`}>{tab.label}</Link>
+                <Link key={tab.href} href={href} className={`${styles.tab} ${active ? styles.active : ''}`}>{tab.label}</Link>
             );
         })}
         </nav>

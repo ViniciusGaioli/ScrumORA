@@ -7,9 +7,8 @@ import MoonIcon from '@/src/assets/icons/MoonIcon/MoonIcon';
 export function ThemeToggle() {
     const { resolvedTheme, setTheme } = useTheme();
 
-    const isDark = resolvedTheme === 'dark';
-    const label = isDark ? 'Mudar para modo claro' : 'Mudar para modo escuro';
-    const toggle = () => setTheme(isDark ? 'light' : 'dark');
+    const toggle = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+    const label = 'Alternar tema';
 
     return (
         <button className={styles.track} onClick={toggle} aria-label={label} title={label}>

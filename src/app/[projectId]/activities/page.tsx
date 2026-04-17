@@ -5,6 +5,7 @@ import { KanbanBoardClient } from "../components/Kanban/KanbanBoard/KanbanBoardC
 import { groupActivities } from "../components/Kanban/KanbanBoard/groupActivities";
 import { fetchActivities } from "../services/activityService";
 import { fetchUserRole } from "../services/projectService";
+import { fetchTeamData } from "../services/teamService";
 import { UserRole } from "@/src/types/project";
 
 const GROUP_OPTIONS = [
@@ -27,9 +28,10 @@ export default async function ActivitiesPage({
     const { group } = await searchParams;
 
     const groupBy = (group ?? 'team') as 'team' | 'sprint';
-    const [activities, userRole] = await Promise.all([
+    const [activities, userRole, teamData] = await Promise.all([
         fetchActivities(projectId),
         fetchUserRole(projectId),
+        fetchTeamData(projectId),
     ]);
     const groups = groupActivities(activities, groupBy);
 
@@ -43,6 +45,7 @@ export default async function ActivitiesPage({
                 </div>
                 <KanbanBoardClient
                     groups={groups}
+                    members={teamData.members}
                     canEdit={canUserEdit(userRole)}
                 />
             </main>
