@@ -9,7 +9,7 @@ const TABS = [
     { label: 'Sprints',     href: 'sprints'     },
     { label: 'Integrantes', href: 'members' },
     { label: 'Equipes',     href: 'team'     },
-    { label: 'Progresso',   href: 'progresso'   },
+    { label: 'Progresso',   href: 'progress'   },
 ];
 
 interface ProjectTabsProps {
