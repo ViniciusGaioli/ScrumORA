@@ -6,18 +6,18 @@ import { AuthGoogleButton } from '../../../components/AuthGoogleButton/AuthGoogl
 
 interface RegisterFormProps {
     onRegister?: (name: string, email: string, password: string) => void;
-    onGoogleRegister?: () => void;
     onLogin?: () => void;
 }
 
-export function RegisterForm({ onRegister, onGoogleRegister, onLogin }: RegisterFormProps) {
+export function RegisterForm({ onRegister, onLogin }: RegisterFormProps) {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirm, setConfirm] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
 
-    function handleSubmit() {
+    async function handleSubmit() {
         if (!name || !email || !password || !confirm) {
             setError('Preencha todos os campos obrigatórios.');
             return;
@@ -27,7 +27,42 @@ export function RegisterForm({ onRegister, onGoogleRegister, onLogin }: Register
             return;
         }
         setError('');
-        onRegister?.(name, email, password);
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome: name, email, senha: password }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                setError(data.message ?? 'Erro ao criar conta.');
+                return;
+            }
+            onRegister?.(name, email, password);
+            setSuccess(true);
+        } catch {
+            setError('Não foi possível conectar ao servidor.');
+        }
+    }
+
+    if (success) {
+        return (
+            <div className={styles.wrapper}>
+                <div className={styles.header}>
+                    <h2 className={styles.title}>Verifique seu email</h2>
+                    <p className={styles.subtitle}>
+                        Enviamos um link de confirmação para <strong>{email}</strong>.
+                        Clique nele para ativar sua conta e entrar.
+                    </p>
+                </div>
+                <p className={styles.footer}>
+                    Já tem uma conta?{' '}
+                    <button className={styles.footerLink} onClick={onLogin}>
+                        Entrar
+                    </button>
+                </p>
+            </div>
+        );
     }
 
     return (
@@ -86,7 +121,12 @@ export function RegisterForm({ onRegister, onGoogleRegister, onLogin }: Register
             <div className={styles.dividerLine} />
         </div>
 
-        <AuthGoogleButton onClick={onGoogleRegister} text="Cadastrar com Google" />
+        <AuthGoogleButton
+          onClick={() => {
+            window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/register`;
+          }}
+          text="Cadastrar com Google"
+        />
 
         <p className={styles.footer}>
             Já tem uma conta?{' '}

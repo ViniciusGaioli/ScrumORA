@@ -5,11 +5,10 @@ import { SectionIntro } from "@/src/app/components/Header/SectionIntro/SectionIn
 import { StatCard } from "./_components/StatCard/StatCard";
 import { ProjectSearchBar } from "./_components/ProjectsSearchBar/ProjectSearchBar";
 import { FilterChipGroup } from "./_components/FilterChipGroup/FilterChipGroup";
-import { ProjectCard } from "./_components/ProjectCard/ProjectCard";
 import { ProjectCardGroup } from "./_components/ProjectCardGroup/ProjectCardGroup";
 import { Project } from "@/src/types/project";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function myProjects() {
     const mockProjects: Project[] = [
@@ -93,6 +92,14 @@ export default function myProjects() {
     ];
 
     const [search, setSearch] = useState('');
+
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            console.log('User ID:', payload.sub);
+        }
+    }, []);
 
     const filterOptions = [
         { value: 'all',      label: 'Todos'        },

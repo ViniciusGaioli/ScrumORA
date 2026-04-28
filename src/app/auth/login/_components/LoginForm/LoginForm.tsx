@@ -1,28 +1,52 @@
 "use client";
 import styles from './LoginForm.module.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthField } from '../../../components/AuthField/AuthField';
 import { AuthGoogleButton } from '../../../components/AuthGoogleButton/AuthGoogleButton';
 
 interface LoginFormProps {
     onLogin?: (email: string, password: string) => void;
-    onGoogleLogin?: () => void;
     onForgotPassword?: () => void;
     onRegister?: () => void;
 }
 
-export function LoginForm({ onLogin, onGoogleLogin, onForgotPassword, onRegister }: LoginFormProps) {
+export function LoginForm({ onLogin, onForgotPassword, onRegister }: LoginFormProps) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    function handleSubmit() {
+    useEffect(() => {
+        const err = searchParams.get('error');
+        if (err) setError(err);
+    }, [searchParams]);
+
+    async function handleSubmit() {
         if (!email || !password) {
             setError('Preencha todos os campos obrigatórios.');
             return;
         }
         setError('');
-        onLogin?.(email, password);
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, senha: password }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                setError(data.message ?? 'Erro ao fazer login.');
+                return;
+            }
+            const data = await res.json();
+            localStorage.setItem('accessToken', data.accessToken);
+            onLogin?.(email, password);
+            router.push('/home/myProjects');
+        } catch {
+            setError('Não foi possível conectar ao servidor.');
+        }
     }
 
     return (
@@ -72,7 +96,12 @@ export function LoginForm({ onLogin, onGoogleLogin, onForgotPassword, onRegister
             <div className={styles.dividerLine} />
         </div>
 
-        <AuthGoogleButton onClick={onGoogleLogin} text="Entrar com Google" />
+        <AuthGoogleButton
+          onClick={() => {
+            window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`;
+          }}
+          text="Entrar com Google"
+        />
 
         <p className={styles.footer}>
             Não tem uma conta?{' '}
