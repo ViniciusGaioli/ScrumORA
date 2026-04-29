@@ -17,6 +17,7 @@ export function RegisterForm({ onRegister, onLogin }: RegisterFormProps) {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
 
+
     async function handleSubmit() {
         if (!name || !email || !password || !confirm) {
             setError('Preencha todos os campos obrigatórios.');

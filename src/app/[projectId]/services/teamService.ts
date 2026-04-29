@@ -1,27 +1,42 @@
 import { Member, ProjectTeam } from '../components/Team/MemberCard/Member';
 import { TeamGroupData } from '../components/Team/TeamGroup/TeamGroup';
 
-const MOCK_TEAMS: ProjectTeam[] = [
-    { id: 1, name: 'Backend' },
-    { id: 2, name: 'Frontend' },
-];
+type ApiMember = {
+    usuario: { id: number; nome: string };
+    papel: string;
+};
 
-const MOCK_MEMBERS: Member[] = [
-    { id: 1, name: 'Vinicius Gaioli',  initials: 'VG', role: 'scrum_master',  teamId: null },
-    { id: 2, name: 'Julia Matos',      initials: 'JM', role: 'product_owner', teamId: null },
-    { id: 3, name: 'Carlos Silva',     initials: 'CS', role: 'member',        teamId: 1    },
-    { id: 4, name: 'Ana Lima',         initials: 'AL', role: 'member',        teamId: 1    },
-    { id: 5, name: 'Rafael Alves',     initials: 'RA', role: 'member',        teamId: 2    },
-    { id: 6, name: 'Pedro Costa',      initials: 'PC', role: 'member',        teamId: 2    },
-];
+function toInitials(nome: string): string {
+    const words = nome.trim().split(/\s+/);
+    return (words[0][0] + (words[1]?.[0] ?? '')).toUpperCase();
+}
+
+function mapRole(papel: string): Member['role'] {
+    if (papel === 'scrum_master') return 'scrum_master';
+    if (papel === 'product_owner') return 'product_owner';
+    return 'member';
+}
 
 export interface TeamData {
     members: Member[];
     teams: ProjectTeam[];
 }
 
-export async function fetchTeamData(_projectId: string): Promise<TeamData> {
-    return { members: MOCK_MEMBERS, teams: MOCK_TEAMS };
+export async function fetchTeamData(projectId: string, token: string): Promise<TeamData> {
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/membros`,
+        { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!res.ok) return { members: [], teams: [] };
+    const data: ApiMember[] = await res.json();
+    const members: Member[] = data.map(m => ({
+        id: m.usuario.id,
+        name: m.usuario.nome,
+        initials: toInitials(m.usuario.nome),
+        role: mapRole(m.papel),
+        teamId: null,
+    }));
+    return { members, teams: [] };
 }
 
 export function groupMembers(members: Member[], teams: ProjectTeam[]): TeamGroupData[] {

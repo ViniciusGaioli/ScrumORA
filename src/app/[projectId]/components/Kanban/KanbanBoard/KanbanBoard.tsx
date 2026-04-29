@@ -19,17 +19,13 @@ export function KanbanBoard({
     onActivityMenuClick,
     onAddActivity,
 }: KanbanBoardProps) {
-    if (groups.length === 0) {
-        return (
-        <div className={styles.empty}>
-            <p className={styles.emptyText}>Nenhuma atividade encontrada.</p>
-        </div>
-        );
-    }
+    const rendered = groups.length > 0
+        ? groups
+        : [{ id: 'default', label: 'Atividades', activities: [] }];
 
     return (
     <div className={styles.board}>
-        {groups.map(group => (
+        {rendered.map(group => (
             <KanbanGroup
             key={group.id}
             group={group}

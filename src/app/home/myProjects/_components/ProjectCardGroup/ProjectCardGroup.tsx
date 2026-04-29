@@ -1,14 +1,14 @@
 "use client";
 
 import styles from './ProjectCardGroup.module.css';
-import { ProjectCard } from '../ProjectCard/ProjectCard';
+import { ProjectCard, ProjectMenuAction } from '../ProjectCard/ProjectCard';
 import { Project } from '@/src/types/project';
 import PlusIcon from '@/src/assets/icons/PlusIcon/PlusIcon';
 
 interface ProjectGridProps {
     projects: Project[];
     onProjectClick?: (project: Project) => void;
-    onProjectMenuClick?: (project: Project) => void;
+    onProjectMenuClick?: (project: Project, action: ProjectMenuAction) => void;
     onNewProject?: () => void;
 }
 

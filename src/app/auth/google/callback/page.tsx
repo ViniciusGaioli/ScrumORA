@@ -10,6 +10,10 @@ export default function GoogleCallbackPage() {
     const token = searchParams.get('token');
     if (token) {
       localStorage.setItem('accessToken', token);
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.nome) localStorage.setItem('userName', payload.nome);
+      } catch { /* ignore */ }
       router.replace('/home/myProjects');
     } else {
       router.replace('/auth/login?error=google_auth_failed');

@@ -67,6 +67,50 @@
     color: var(--color-text-muted);
 }
 
+.menuWrap {
+    position: relative;
+}
+
+.dropdown {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    padding: 0.25rem;
+    z-index: 50;
+    min-width: 8rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdownItem {
+    padding: 0.4375rem 0.625rem;
+    border-radius: 0.375rem;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-size: 0.8125rem;
+    font-family: inherit;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background 0.12s;
+}
+
+.dropdownItem:hover {
+    background: var(--color-bg);
+}
+
+.dropdownItemDelete {
+    color: #ef4444;
+}
+
+.dropdownItemDelete:hover {
+    background: color-mix(in srgb, #ef4444 8%, transparent);
+}
+
 .sprintTag {
     display: flex;
     align-items: center;

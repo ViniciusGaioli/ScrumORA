@@ -42,8 +42,10 @@ export function LoginForm({ onLogin, onForgotPassword, onRegister }: LoginFormPr
             }
             const data = await res.json();
             localStorage.setItem('accessToken', data.accessToken);
+            if (data.user?.nome) localStorage.setItem('userName', data.user.nome);
             onLogin?.(email, password);
-            router.push('/home/myProjects');
+            const redirect = searchParams.get('redirect');
+            router.push(redirect ?? '/home/myProjects');
         } catch {
             setError('Não foi possível conectar ao servidor.');
         }
