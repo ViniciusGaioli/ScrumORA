@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import styles from "./Page.module.css";
 import { GroupBy } from "../components/GroupBy/GroupBy";
@@ -22,7 +22,7 @@ function canUserEdit(role: UserRole): boolean {
     return role === 'scrum_master' || role === 'product_owner';
 }
 
-export default function ActivitiesPage() {
+function ActivitiesContent() {
     const { projectId } = useParams<{ projectId: string }>();
     const searchParams = useSearchParams();
     const groupBy = (searchParams.get('group') ?? 'team') as 'team' | 'sprint';
@@ -30,6 +30,10 @@ export default function ActivitiesPage() {
     const [activities, setActivities] = useState<Activity[]>([]);
     const [userRole, setUserRole] = useState<UserRole>('member');
     const [members, setMembers] = useState<Member[]>([]);
+
+    function loadActivities(token: string) {
+        fetchActivities(projectId, token).then(setActivities);
+    }
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
@@ -46,6 +50,11 @@ export default function ActivitiesPage() {
         });
     }, [projectId]);
 
+    function handleCreated() {
+        const token = localStorage.getItem('accessToken');
+        if (token) loadActivities(token);
+    }
+
     const groups = groupActivities(activities, groupBy);
 
     return (
@@ -55,11 +64,21 @@ export default function ActivitiesPage() {
                     <GroupBy options={GROUP_OPTIONS} paramKey="group" defaultValue="team" />
                 </div>
                 <KanbanBoardClient
+                    projectId={projectId}
                     groups={groups}
                     members={members}
                     canEdit={canUserEdit(userRole)}
+                    onCreated={handleCreated}
                 />
             </main>
         </div>
+    );
+}
+
+export default function ActivitiesPage() {
+    return (
+        <Suspense>
+            <ActivitiesContent />
+        </Suspense>
     );
 }

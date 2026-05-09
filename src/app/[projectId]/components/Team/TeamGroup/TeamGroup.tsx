@@ -11,11 +11,9 @@ export interface TeamGroupData {
 
 interface TeamGroupProps {
     group: TeamGroupData;
-    canEdit?: boolean;
-    onMemberMenuClick?: (member: Member) => void;
 }
 
-export function TeamGroup({ group, canEdit = false, onMemberMenuClick }: TeamGroupProps) {
+export function TeamGroup({ group }: TeamGroupProps) {
     return (
         <div className={styles.group}>
             <div className={styles.header}>
@@ -31,12 +29,7 @@ export function TeamGroup({ group, canEdit = false, onMemberMenuClick }: TeamGro
             ) : (
                 <div className={styles.grid}>
                     {group.members.map(member => (
-                        <MemberCard
-                            key={member.id}
-                            member={member}
-                            canEdit={canEdit}
-                            onMenuClick={onMemberMenuClick}
-                        />
+                        <MemberCard key={member.id} member={member} />
                     ))}
                 </div>
             )}

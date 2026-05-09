@@ -24,6 +24,11 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
         const token = localStorage.getItem('accessToken');
         if (!token) { router.replace('/auth/login'); return; }
 
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            console.log('[ProjectLayout] User ID:', payload.sub);
+        } catch { /* invalid token */ }
+
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/membros`, {
             headers: { Authorization: `Bearer ${token}` },
         }).then(res => {

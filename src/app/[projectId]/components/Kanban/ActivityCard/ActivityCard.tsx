@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useRef, useState } from 'react';
 import styles from './ActivityCard.module.css';
 import { Activity } from './Activity';
 import CalendarIcon from '@/src/assets/icons/CalendarIcon/CalendarIcon';
+
+export type ActivityMenuAction = 'edit' | 'delete';
 
 const IconMore = () => (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -45,18 +48,30 @@ function getAvatarColor(index: number): string {
 interface ActivityCardProps {
     activity: Activity;
     canEdit?: boolean;
-    onClick?: (activity: Activity) => void;
-    onMenuClick?: (activity: Activity) => void;
+    onMenuClick?: (activity: Activity, action: ActivityMenuAction) => void;
 }
 
-export function ActivityCard({
-    activity,
-    canEdit = false,
-    onClick,
-    onMenuClick,
-}: ActivityCardProps) {
+export function ActivityCard({ activity, canEdit = false, onMenuClick }: ActivityCardProps) {
     const overdue = activity.status !== 'done' && isOverdue(activity.endDate);
     const accent = STATUS_COLOR[activity.status] ?? STATUS_COLOR.backlog;
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!menuOpen) return;
+        function handleClickOutside(e: MouseEvent) {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setMenuOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [menuOpen]);
+
+    function handleAction(action: ActivityMenuAction) {
+        setMenuOpen(false);
+        onMenuClick?.(activity, action);
+    }
 
     const allResponsibles = activity.responsibles.flatMap(r => {
         if (r.user) return [{ id: `u-${r.user.id}`, initials: r.user.initials, name: r.user.name }];
@@ -71,7 +86,7 @@ export function ActivityCard({
         <div
             className={styles.card}
             style={{ '--accent': accent } as React.CSSProperties}
-            onClick={() => onClick?.(activity)}
+            onClick={() => onMenuClick?.(activity, 'edit')}
         >
             <div className={styles.accentBar} />
             <div className={styles.top}>
@@ -81,14 +96,23 @@ export function ActivityCard({
                         Sprint {activity.sprint.id}
                     </span>
                 ) : <span />}
+
                 {canEdit && (
-                    <button
-                        className={styles.menuBtn}
-                        onClick={e => { e.stopPropagation(); onMenuClick?.(activity); }}
-                        aria-label="Opções da atividade"
-                    >
-                        <IconMore />
-                    </button>
+                    <div className={styles.menuWrap} ref={menuRef}>
+                        <button
+                            className={styles.menuBtn}
+                            onClick={e => { e.stopPropagation(); setMenuOpen(v => !v); }}
+                            aria-label="Opções da atividade"
+                        >
+                            <IconMore />
+                        </button>
+                        {menuOpen && (
+                            <div className={styles.dropdown} onClick={e => e.stopPropagation()}>
+                                <button className={styles.dropdownItem} onClick={() => handleAction('edit')}>Editar</button>
+                                <button className={`${styles.dropdownItem} ${styles.dropdownItemDelete}`} onClick={() => handleAction('delete')}>Excluir</button>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 
@@ -107,19 +131,12 @@ export function ActivityCard({
                 {visibleResponsibles.length > 0 && (
                     <div className={styles.avatars}>
                         {visibleResponsibles.map((r, i) => (
-                            <div
-                                key={r.id}
-                                className={styles.avatar}
-                                style={{ background: getAvatarColor(i) }}
-                                title={r.name}
-                            >
+                            <div key={r.id} className={styles.avatar} style={{ background: getAvatarColor(i) }} title={r.name}>
                                 {r.initials}
                             </div>
                         ))}
                         {extraCount > 0 && (
-                            <div className={`${styles.avatar} ${styles.avatarExtra}`}>
-                                +{extraCount}
-                            </div>
+                            <div className={`${styles.avatar} ${styles.avatarExtra}`}>+{extraCount}</div>
                         )}
                     </div>
                 )}

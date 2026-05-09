@@ -49,6 +49,23 @@ function mapActivity(a: ApiActivity): Activity {
     };
 }
 
+export interface ApiSprintInfo {
+    id: number;
+    nome: string;
+    dataInicio: string;
+    dataFim: string;
+    status: string;
+}
+
+export async function fetchSprints(projectId: string, token: string): Promise<ApiSprintInfo[]> {
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/sprints`,
+        { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!res.ok) return [];
+    return res.json();
+}
+
 export async function fetchActivities(projectId: string, token: string): Promise<Activity[]> {
     const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/atividades`,

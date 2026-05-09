@@ -1,59 +1,94 @@
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import styles from './page.module.css';
-import { SprintCard, SprintGroupData } from '../components/Sprints/SprintCard/SprintCard';
+import { SprintSection, SprintMenuAction } from '../components/Sprints/SprintSection/SprintSection';
 import { SprintToolbar } from '../components/Sprints/SprintToolbar/SprintToolbar';
-import { fetchActivities } from '../services/activityService';
+import { EditSprintModal } from '../components/Sprints/EditSprintModal/EditSprintModal';
+import { fetchActivities, fetchSprints, ApiSprintInfo } from '../services/activityService';
 import { fetchUserRole } from '../services/projectService';
+import { fetchTeamData } from '../services/teamService';
 import { Activity } from '../components/Kanban/ActivityCard/Activity';
+import { Member } from '../components/Team/MemberCard/Member';
 import { UserRole } from '@/src/types/project';
 
 function canUserEdit(role: UserRole): boolean {
     return role === 'scrum_master' || role === 'product_owner';
 }
 
-function groupBySprint(activities: Activity[]): SprintGroupData[] {
-    const map = new Map<number, SprintGroupData>();
-    for (const activity of activities) {
-        if (!activity.sprint) continue;
-        const { id, name, description } = activity.sprint;
-        const existing = map.get(id);
-        if (existing) {
-            existing.activities.push(activity);
-        } else {
-            map.set(id, { id, name, description, activities: [activity] });
-        }
+export default function SprintsPage() {
+    const { projectId } = useParams<{ projectId: string }>();
+    const [sprints, setSprints] = useState<ApiSprintInfo[]>([]);
+    const [activities, setActivities] = useState<Activity[]>([]);
+    const [members, setMembers] = useState<Member[]>([]);
+    const [userRole, setUserRole] = useState<UserRole>('member');
+    const [sprintTarget, setSprintTarget] = useState<{ sprint: ApiSprintInfo; tab: 'edit' | 'delete' } | null>(null);
+
+    function handleSprintMenu(sprint: ApiSprintInfo, action: SprintMenuAction) {
+        setSprintTarget({ sprint, tab: action });
     }
-    return Array.from(map.values()).sort((a, b) => a.id - b.id);
-}
 
-export default async function SprintsPage({
-    params,
-}: {
-    params: Promise<{ projectId: string }>;
-}) {
-    const { projectId } = await params;
+    function load() {
+        const token = localStorage.getItem('accessToken');
+        if (!token) return;
+        Promise.all([
+            fetchSprints(projectId, token),
+            fetchActivities(projectId, token),
+            fetchTeamData(projectId, token),
+            fetchUserRole(projectId, token),
+        ]).then(([sprintsData, activitiesData, teamData, role]) => {
+            setSprints(sprintsData.sort((a, b) => a.id - b.id));
+            setActivities(activitiesData);
+            setMembers(teamData.members);
+            setUserRole(role);
+        });
+    }
 
-    const [activities, userRole] = await Promise.all([
-        fetchActivities(projectId),
-        fetchUserRole(projectId),
-    ]);
+    useEffect(() => { load(); }, [projectId]);
 
-    const sprints = groupBySprint(activities);
+    const productBacklog = activities.filter(a => !a.sprint);
     const canEdit = canUserEdit(userRole);
 
     return (
         <div className={styles.page}>
             <main className={styles.main}>
-                <SprintToolbar canEdit={canEdit} activities={activities} />
+                <SprintToolbar
+                    projectId={projectId}
+                    canEdit={canEdit}
+                    activities={activities}
+                    onCreated={load}
+                />
                 {sprints.length === 0 ? (
-                    <p className={styles.empty}>Nenhuma sprint encontrada.</p>
+                    <p className={styles.empty}>Nenhuma sprint encontrada. Crie a primeira sprint para começar.</p>
                 ) : (
                     <div className={styles.list}>
                         {sprints.map(sprint => (
-                            <SprintCard key={sprint.id} sprint={sprint} allActivities={activities} canEdit={canEdit} />
+                            <SprintSection
+                                key={sprint.id}
+                                sprint={sprint}
+                                sprintActivities={activities.filter(a => a.sprint?.id === sprint.id)}
+                                productBacklog={productBacklog}
+                                members={members}
+                                projectId={projectId}
+                                canEdit={canEdit}
+                                onRefresh={load}
+                                onSprintMenuClick={handleSprintMenu}
+                            />
                         ))}
                     </div>
                 )}
             </main>
+
+            {sprintTarget && (
+                <EditSprintModal
+                    sprint={sprintTarget.sprint}
+                    projectId={projectId}
+                    initialTab={sprintTarget.tab}
+                    onClose={() => setSprintTarget(null)}
+                    onSaved={() => { load(); setSprintTarget(null); }}
+                />
+            )}
         </div>
     );
 }

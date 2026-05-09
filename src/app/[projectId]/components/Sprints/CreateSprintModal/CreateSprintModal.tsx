@@ -20,47 +20,76 @@ const IconSearch = () => (
     </svg>
 );
 
-interface SprintEditable {
-    id: number;
-    name: string;
-    description?: string;
-    activityIds: number[];
-}
-
 interface CreateSprintModalProps {
+    projectId: string;
     activities: Activity[];
-    sprint?: SprintEditable;
     onClose: () => void;
+    onCreated: () => void;
 }
 
-export function CreateSprintModal({ activities, sprint, onClose }: CreateSprintModalProps) {
-    const isEdit = sprint !== undefined;
-    const [name, setName] = useState(sprint?.name ?? '');
-    const [description, setDescription] = useState(sprint?.description ?? '');
-    const [selectedIds, setSelectedIds] = useState<number[]>(sprint?.activityIds ?? []);
+export function CreateSprintModal({ projectId, activities, onClose, onCreated }: CreateSprintModalProps) {
+    const [name, setName] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [search, setSearch] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const selectedActivities = activities.filter(a => selectedIds.includes(a.id));
-    const suggestions = search.trim().length > 0
-        ? activities.filter(a =>
-            !selectedIds.includes(a.id) &&
-            a.name.toLowerCase().includes(search.toLowerCase())
-        )
-        : [];
+    const backlogActivities = activities.filter(a => !a.sprint);
+    const selectedActivities = backlogActivities.filter(a => selectedIds.includes(a.id));
+    const suggestions = backlogActivities.filter(a =>
+        !selectedIds.includes(a.id) &&
+        a.name.toLowerCase().includes(search.toLowerCase())
+    );
 
-    const addActivity = (id: number) => {
-        setSelectedIds(prev => [...prev, id]);
-        setSearch('');
-    };
+    const addActivity = (id: number) => { setSelectedIds(prev => [...prev, id]); setSearch(''); };
+    const removeActivity = (activity: Activity) => setSelectedIds(prev => prev.filter(id => id !== activity.id));
 
-    const removeActivity = (activity: Activity) => {
-        setSelectedIds(prev => prev.filter(id => id !== activity.id));
-    };
+    async function handleSubmit() {
+        if (!name.trim() || !startDate || !endDate) {
+            setError('Preencha todos os campos obrigatórios.');
+            return;
+        }
+        setError('');
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('accessToken');
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/sprints`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ nome: name.trim(), dataInicio: startDate, dataFim: endDate }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                setError(data.message ?? 'Erro ao criar sprint.');
+                return;
+            }
+            const sprint = await res.json();
+
+            await Promise.all(selectedIds.map(activityId =>
+                fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/atividades/${activityId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ sprintId: sprint.id }),
+                })
+            ));
+
+            onCreated();
+            onClose();
+        } catch {
+            setError('Não foi possível conectar ao servidor.');
+        } finally {
+            setLoading(false);
+        }
+    }
 
     return (
         <div className={styles.backdrop} onClick={onClose} role="presentation">
             <div
                 className={styles.modal}
+                style={{ '--accent': 'var(--color-brand)' } as React.CSSProperties}
                 onClick={e => e.stopPropagation()}
                 role="dialog"
                 aria-modal="true"
@@ -69,9 +98,7 @@ export function CreateSprintModal({ activities, sprint, onClose }: CreateSprintM
                 <div className={styles.accentBar} />
 
                 <div className={styles.header}>
-                    <h2 id="create-sprint-title" className={styles.title}>
-                        {isEdit ? `Editar Sprint ${sprint!.id}` : 'Criar Sprint'}
-                    </h2>
+                    <h2 id="create-sprint-title" className={styles.title}>Criar Sprint</h2>
                     <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar">
                         <IconClose />
                     </button>
@@ -79,6 +106,14 @@ export function CreateSprintModal({ activities, sprint, onClose }: CreateSprintM
 
                 <div className={styles.body}>
                     <div className={styles.left}>
+                        {error && (
+                            <div className={styles.errorBanner}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                {error}
+                            </div>
+                        )}
                         <label className={styles.field}>
                             <span className={styles.fieldLabel}>Nome da sprint</span>
                             <input
@@ -86,25 +121,25 @@ export function CreateSprintModal({ activities, sprint, onClose }: CreateSprintM
                                 className={styles.input}
                                 value={name}
                                 onChange={e => setName(e.target.value)}
-                                placeholder="Ex.: Sprint 4"
+                                placeholder="Ex.: Sprint 1"
+                                maxLength={50}
                             />
                         </label>
-
-                        <label className={styles.field}>
-                            <span className={styles.fieldLabel}>Descrição</span>
-                            <textarea
-                                className={styles.textarea}
-                                value={description}
-                                onChange={e => setDescription(e.target.value)}
-                                placeholder="Descreva o objetivo da sprint"
-                                rows={5}
-                            />
-                        </label>
+                        <div className={styles.dates}>
+                            <label className={styles.field}>
+                                <span className={styles.fieldLabel}>Data de início</span>
+                                <input type="date" className={styles.input} value={startDate} onChange={e => setStartDate(e.target.value)} />
+                            </label>
+                            <label className={styles.field}>
+                                <span className={styles.fieldLabel}>Data final</span>
+                                <input type="date" className={styles.input} value={endDate} onChange={e => setEndDate(e.target.value)} />
+                            </label>
+                        </div>
                     </div>
 
                     <div className={styles.right}>
                         <div className={styles.rightHeader}>
-                            <span className={styles.sectionTitle}>Atividades</span>
+                            <span className={styles.sectionTitle}>Product Backlog</span>
                             <div className={styles.searchWrap}>
                                 <span className={styles.searchIcon}><IconSearch /></span>
                                 <input
@@ -118,17 +153,9 @@ export function CreateSprintModal({ activities, sprint, onClose }: CreateSprintM
                                     <ul className={styles.suggestions}>
                                         {suggestions.map(a => (
                                             <li key={a.id}>
-                                                <button
-                                                    type="button"
-                                                    className={styles.suggestionItem}
-                                                    onClick={() => addActivity(a.id)}
-                                                >
-                                                    <span
-                                                        className={styles.statusDot}
-                                                        style={{ background: SPRINT_STATUS_COLOR[a.status] }}
-                                                        title={SPRINT_STATUS_LABEL[a.status]}
-                                                    />
-                                                    <span className={styles.suggestionName}>{a.name}</span>
+                                                <button type="button" className={styles.suggestionItem} onClick={() => addActivity(a.id)}>
+                                                                    <span style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', flexShrink: 0, background: SPRINT_STATUS_COLOR[a.status] }} title={SPRINT_STATUS_LABEL[a.status]} />
+                                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</span>
                                                 </button>
                                             </li>
                                         ))}
@@ -138,12 +165,12 @@ export function CreateSprintModal({ activities, sprint, onClose }: CreateSprintM
                         </div>
 
                         {selectedActivities.length === 0 ? (
-                            <p className={styles.empty}>Nenhuma atividade adicionada ainda.</p>
+                            <p className={styles.empty}>Nenhuma atividade adicionada ao sprint.</p>
                         ) : (
                             <div className={styles.activitiesGrid}>
                                 {selectedActivities.map(activity => (
                                     <div key={activity.id} className={styles.activityWrap}>
-                                        <ActivityCard activity={activity} canEdit onMenuClick={removeActivity} />
+                                        <ActivityCard activity={activity} canEdit onMenuClick={(a: Activity) => removeActivity(a)} />
                                     </div>
                                 ))}
                             </div>
@@ -152,11 +179,9 @@ export function CreateSprintModal({ activities, sprint, onClose }: CreateSprintM
                 </div>
 
                 <div className={styles.footer}>
-                    <button type="button" className={styles.cancelBtn} onClick={onClose}>
-                        Cancelar
-                    </button>
-                    <button type="button" className={styles.submitBtn}>
-                        {isEdit ? 'Salvar alterações' : 'Criar sprint'}
+                    <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancelar</button>
+                    <button type="button" className={styles.submitBtn} onClick={handleSubmit} disabled={loading}>
+                        {loading ? 'Criando...' : 'Criar sprint'}
                     </button>
                 </div>
 

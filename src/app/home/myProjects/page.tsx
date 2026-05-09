@@ -56,6 +56,11 @@ export default function myProjects() {
 
         setUserName(localStorage.getItem('userName') ?? '');
 
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            console.log('[myProjects] User ID:', payload.sub);
+        } catch { /* invalid token */ }
+
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/me`, {
             headers: { Authorization: `Bearer ${token}` },
         })

@@ -6,11 +6,13 @@ import { CreateTeamModal } from '../CreateTeamModal/CreateTeamModal';
 import { Member } from '../MemberCard/Member';
 
 interface TeamToolbarProps {
+    projectId: string;
     canEdit?: boolean;
     members: Member[];
+    onCreated: () => void;
 }
 
-export function TeamToolbar({ canEdit = false, members }: TeamToolbarProps) {
+export function TeamToolbar({ projectId, canEdit = false, members, onCreated }: TeamToolbarProps) {
     const [open, setOpen] = useState(false);
 
     if (!canEdit) return null;
@@ -22,7 +24,14 @@ export function TeamToolbar({ canEdit = false, members }: TeamToolbarProps) {
                     Criar nova equipe
                 </button>
             </div>
-            {open && <CreateTeamModal members={members} onClose={() => setOpen(false)} />}
+            {open && (
+                <CreateTeamModal
+                    projectId={projectId}
+                    members={members}
+                    onClose={() => setOpen(false)}
+                    onCreated={onCreated}
+                />
+            )}
         </>
     );
 }

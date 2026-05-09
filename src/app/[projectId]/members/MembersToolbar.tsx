@@ -5,10 +5,11 @@ import styles from './MembersToolbar.module.css';
 import { InviteMemberModal } from '../components/Team/InviteMemberModal/InviteMemberModal';
 
 interface MembersToolbarProps {
+    projectId: string;
     canEdit?: boolean;
 }
 
-export function MembersToolbar({ canEdit = false }: MembersToolbarProps) {
+export function MembersToolbar({ projectId, canEdit = false }: MembersToolbarProps) {
     const [open, setOpen] = useState(false);
 
     if (!canEdit) return null;
@@ -20,7 +21,7 @@ export function MembersToolbar({ canEdit = false }: MembersToolbarProps) {
                     Convidar novo integrante ao projeto
                 </button>
             </div>
-            {open && <InviteMemberModal onClose={() => setOpen(false)} />}
+            {open && <InviteMemberModal projectId={projectId} onClose={() => setOpen(false)} />}
         </>
     );
 }

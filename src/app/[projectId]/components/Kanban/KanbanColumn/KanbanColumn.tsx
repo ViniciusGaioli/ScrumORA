@@ -1,7 +1,7 @@
 "use client";
 
 import styles from './KanbanColumn.module.css';
-import { ActivityCard } from '../ActivityCard/ActivityCard';
+import { ActivityCard, ActivityMenuAction } from '../ActivityCard/ActivityCard';
 import { Activity, ActivityStatus } from '../ActivityCard/Activity';
 import PlusIcon from '@/src/assets/icons/PlusIcon/PlusIcon';
 
@@ -17,19 +17,11 @@ interface KanbanColumnProps {
     status: ActivityStatus;
     activities: Activity[];
     canEdit?: boolean;
-    onActivityClick?: (activity: Activity) => void;
-    onActivityMenuClick?: (activity: Activity) => void;
+    onActivityMenuClick?: (activity: Activity, action: ActivityMenuAction) => void;
     onAddActivity?: (status: ActivityStatus) => void;
 }
 
-export function KanbanColumn({
-    status,
-    activities,
-    canEdit = false,
-    onActivityClick,
-    onActivityMenuClick,
-    onAddActivity,
-}: KanbanColumnProps) {
+export function KanbanColumn({ status, activities, canEdit = false, onActivityMenuClick, onAddActivity }: KanbanColumnProps) {
     const config = STATUS_CONFIG[status];
 
     return (
@@ -46,16 +38,12 @@ export function KanbanColumn({
                         key={activity.id}
                         activity={activity}
                         canEdit={canEdit}
-                        onClick={onActivityClick}
                         onMenuClick={onActivityMenuClick}
                     />
                 ))}
 
                 {canEdit && (
-                    <button
-                        className={styles.addBtn}
-                        onClick={() => onAddActivity?.(status)}
-                    >
+                    <button className={styles.addBtn} onClick={() => onAddActivity?.(status)}>
                         <PlusIcon size={11} />
                         Criar nova atividade
                     </button>

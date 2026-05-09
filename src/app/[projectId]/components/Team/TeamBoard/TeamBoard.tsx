@@ -1,14 +1,11 @@
 import styles from './TeamBoard.module.css';
 import { TeamGroup, TeamGroupData } from '../TeamGroup/TeamGroup';
-import { Member } from '../MemberCard/Member';
 
 interface TeamBoardProps {
     groups: TeamGroupData[];
-    canEdit?: boolean;
-    onMemberMenuClick?: (member: Member) => void;
 }
 
-export function TeamBoard({ groups, canEdit = false, onMemberMenuClick }: TeamBoardProps) {
+export function TeamBoard({ groups }: TeamBoardProps) {
     if (groups.length === 0) {
         return (
             <div className={styles.empty}>
@@ -20,12 +17,7 @@ export function TeamBoard({ groups, canEdit = false, onMemberMenuClick }: TeamBo
     return (
         <div className={styles.board}>
             {groups.map(group => (
-                <TeamGroup
-                    key={group.id}
-                    group={group}
-                    canEdit={canEdit}
-                    onMemberMenuClick={onMemberMenuClick}
-                />
+                <TeamGroup key={group.id} group={group} />
             ))}
         </div>
     );

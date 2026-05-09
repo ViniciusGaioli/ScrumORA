@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import styles from './CreateTeamModal.module.css';
+import styles from '../../Kanban/CreateActivityModal/CreateActivityModal.module.css';
 import { MemberCard } from '../MemberCard/MemberCard';
 import { Member } from '../MemberCard/Member';
 
@@ -20,37 +20,71 @@ const IconSearch = () => (
 );
 
 interface CreateTeamModalProps {
+    projectId: string;
     members: Member[];
     onClose: () => void;
+    onCreated: () => void;
 }
 
-export function CreateTeamModal({ members, onClose }: CreateTeamModalProps) {
+export function CreateTeamModal({ projectId, members, onClose, onCreated }: CreateTeamModalProps) {
     const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [search, setSearch] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const selectedMembers = members.filter(m => selectedIds.includes(m.id));
-    const suggestions = search.trim().length > 0
-        ? members.filter(m =>
-            !selectedIds.includes(m.id) &&
-            m.name.toLowerCase().includes(search.toLowerCase())
-        )
-        : [];
+    const suggestions = members.filter(m =>
+        !selectedIds.includes(m.id) &&
+        m.name.toLowerCase().includes(search.toLowerCase())
+    );
 
-    const addMember = (id: number) => {
-        setSelectedIds(prev => [...prev, id]);
-        setSearch('');
-    };
+    const addMember = (id: number) => { setSelectedIds(prev => [...prev, id]); setSearch(''); };
+    const removeMember = (member: Member) => setSelectedIds(prev => prev.filter(id => id !== member.id));
 
-    const removeMember = (member: Member) => {
-        setSelectedIds(prev => prev.filter(id => id !== member.id));
-    };
+    async function handleSubmit() {
+        if (!name.trim()) {
+            setError('Informe o nome da equipe.');
+            return;
+        }
+        setError('');
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('accessToken');
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/equipes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ nome: name.trim() }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                setError(data.message ?? 'Erro ao criar equipe.');
+                return;
+            }
+            const equipe = await res.json();
+
+            await Promise.all(selectedIds.map(userId =>
+                fetch(`${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/equipes/${equipe.id}/membros/${userId}`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+            ));
+
+            onCreated();
+            onClose();
+        } catch {
+            setError('Não foi possível conectar ao servidor.');
+        } finally {
+            setLoading(false);
+        }
+    }
 
     return (
         <div className={styles.backdrop} onClick={onClose} role="presentation">
             <div
                 className={styles.modal}
+                style={{ '--accent': 'var(--color-brand)' } as React.CSSProperties}
                 onClick={e => e.stopPropagation()}
                 role="dialog"
                 aria-modal="true"
@@ -67,6 +101,14 @@ export function CreateTeamModal({ members, onClose }: CreateTeamModalProps) {
 
                 <div className={styles.body}>
                     <div className={styles.left}>
+                        {error && (
+                            <div className={styles.errorBanner}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                {error}
+                            </div>
+                        )}
                         <label className={styles.field}>
                             <span className={styles.fieldLabel}>Nome da equipe</span>
                             <input
@@ -74,18 +116,8 @@ export function CreateTeamModal({ members, onClose }: CreateTeamModalProps) {
                                 className={styles.input}
                                 value={name}
                                 onChange={e => setName(e.target.value)}
-                                placeholder="Dê um nome à equipe"
-                            />
-                        </label>
-
-                        <label className={styles.field}>
-                            <span className={styles.fieldLabel}>Descrição</span>
-                            <textarea
-                                className={styles.textarea}
-                                value={description}
-                                onChange={e => setDescription(e.target.value)}
-                                placeholder="Descreva o propósito da equipe"
-                                rows={5}
+                                placeholder="Ex.: Backend, Frontend, QA"
+                                maxLength={50}
                             />
                         </label>
                     </div>
@@ -106,11 +138,7 @@ export function CreateTeamModal({ members, onClose }: CreateTeamModalProps) {
                                     <ul className={styles.suggestions}>
                                         {suggestions.map(m => (
                                             <li key={m.id}>
-                                                <button
-                                                    type="button"
-                                                    className={styles.suggestionItem}
-                                                    onClick={() => addMember(m.id)}
-                                                >
+                                                <button type="button" className={styles.suggestionItem} onClick={() => addMember(m.id)}>
                                                     <span className={styles.suggestionInitials}>{m.initials}</span>
                                                     <span>{m.name}</span>
                                                 </button>
@@ -126,12 +154,7 @@ export function CreateTeamModal({ members, onClose }: CreateTeamModalProps) {
                         ) : (
                             <div className={styles.responsiblesGrid}>
                                 {selectedMembers.map(member => (
-                                    <MemberCard
-                                        key={member.id}
-                                        member={member}
-                                        canEdit
-                                        onMenuClick={removeMember}
-                                    />
+                                    <MemberCard key={member.id} member={member} canEdit onMenuClick={removeMember} />
                                 ))}
                             </div>
                         )}
@@ -139,11 +162,9 @@ export function CreateTeamModal({ members, onClose }: CreateTeamModalProps) {
                 </div>
 
                 <div className={styles.footer}>
-                    <button type="button" className={styles.cancelBtn} onClick={onClose}>
-                        Cancelar
-                    </button>
-                    <button type="button" className={styles.submitBtn}>
-                        Criar equipe
+                    <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancelar</button>
+                    <button type="button" className={styles.submitBtn} onClick={handleSubmit} disabled={loading}>
+                        {loading ? 'Criando...' : 'Criar equipe'}
                     </button>
                 </div>
 

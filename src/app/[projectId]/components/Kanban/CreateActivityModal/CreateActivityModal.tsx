@@ -36,29 +36,40 @@ const STATUS_LABEL: Record<ActivityStatus, string> = {
     done:        'Finalizada',
 };
 
+const STATUS_TO_ETAPA: Record<ActivityStatus, string> = {
+    backlog:     'backlog',
+    development: 'desenvolvimento',
+    impediment:  'impedimento',
+    approval:    'aprovacao',
+    done:        'finalizada',
+};
+
 interface CreateActivityModalProps {
+    projectId: string;
     status: ActivityStatus;
     members: Member[];
+    sprintId?: number;
     onClose: () => void;
+    onCreated: () => void;
 }
 
-export function CreateActivityModal({ status, members, onClose }: CreateActivityModalProps) {
+export function CreateActivityModal({ projectId, status, members, sprintId, onClose, onCreated }: CreateActivityModalProps) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [search, setSearch] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const accent = STATUS_COLOR[status];
 
     const selectedMembers = members.filter(m => selectedIds.includes(m.id));
-    const suggestions = search.trim().length > 0
-        ? members.filter(m =>
-            !selectedIds.includes(m.id) &&
-            m.name.toLowerCase().includes(search.toLowerCase())
-        )
-        : [];
+    const suggestions = members.filter(m =>
+        !selectedIds.includes(m.id) &&
+        m.name.toLowerCase().includes(search.toLowerCase())
+    );
 
     const addMember = (id: number) => {
         setSelectedIds(prev => [...prev, id]);
@@ -68,6 +79,56 @@ export function CreateActivityModal({ status, members, onClose }: CreateActivity
     const removeMember = (member: Member) => {
         setSelectedIds(prev => prev.filter(id => id !== member.id));
     };
+
+    async function handleSubmit() {
+        if (!name.trim() || !description.trim() || !startDate || !endDate) {
+            setError('Preencha todos os campos obrigatórios.');
+            return;
+        }
+        setError('');
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('accessToken');
+            const body: Record<string, unknown> = {
+                nome: name.trim(),
+                descricao: description.trim(),
+                dataInicio: startDate,
+                dataFim: endDate,
+                etapa: STATUS_TO_ETAPA[status],
+            };
+            if (sprintId !== undefined) body.sprintId = sprintId;
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/atividades`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify(body),
+                },
+            );
+            if (!res.ok) {
+                const data = await res.json();
+                setError(data.message ?? 'Erro ao criar atividade.');
+                return;
+            }
+            const created = await res.json();
+
+            if (selectedIds.length > 0) {
+                await fetch(`${process.env.NEXT_PUBLIC_API_URL}/atividade-responsavel`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ atividadeId: created.id, usuarioIds: selectedIds }),
+                });
+            }
+
+            onCreated();
+            onClose();
+        } catch {
+            setError('Não foi possível conectar ao servidor.');
+        } finally {
+            setLoading(false);
+        }
+    }
 
     return (
         <div className={styles.backdrop} onClick={onClose} role="presentation">
@@ -96,6 +157,15 @@ export function CreateActivityModal({ status, members, onClose }: CreateActivity
 
                 <div className={styles.body}>
                     <div className={styles.left}>
+                        {error && (
+                            <div className={styles.errorBanner}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                {error}
+                            </div>
+                        )}
+
                         <label className={styles.field}>
                             <span className={styles.fieldLabel}>Nome da atividade</span>
                             <input
@@ -104,6 +174,7 @@ export function CreateActivityModal({ status, members, onClose }: CreateActivity
                                 value={name}
                                 onChange={e => setName(e.target.value)}
                                 placeholder="Dê um nome à atividade"
+                                maxLength={50}
                             />
                         </label>
 
@@ -115,6 +186,7 @@ export function CreateActivityModal({ status, members, onClose }: CreateActivity
                                 onChange={e => setDescription(e.target.value)}
                                 placeholder="Descreva o que precisa ser feito"
                                 rows={5}
+                                maxLength={255}
                             />
                         </label>
 
@@ -192,8 +264,8 @@ export function CreateActivityModal({ status, members, onClose }: CreateActivity
                     <button type="button" className={styles.cancelBtn} onClick={onClose}>
                         Cancelar
                     </button>
-                    <button type="button" className={styles.submitBtn}>
-                        Criar atividade
+                    <button type="button" className={styles.submitBtn} onClick={handleSubmit} disabled={loading}>
+                        {loading ? 'Criando...' : 'Criar atividade'}
                     </button>
                 </div>
 

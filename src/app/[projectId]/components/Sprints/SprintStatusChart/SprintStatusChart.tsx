@@ -28,25 +28,19 @@ export const SPRINT_STATUS_COLOR: Record<ActivityStatus, string> = {
 interface SprintStatusChartProps {
     counts: Record<ActivityStatus, number>;
     total: number;
+    size?: number;
 }
 
-const SIZE = 160;
-const STROKE = 22;
-const RADIUS = (SIZE - STROKE) / 2;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+export function SprintStatusChart({ counts, total, size = 160 }: SprintStatusChartProps) {
+    const stroke = size * 0.1375;
+    const radius = (size - stroke) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const fontSize = size * 0.28;
 
-export function SprintStatusChart({ counts, total }: SprintStatusChartProps) {
     if (total === 0) {
         return (
-            <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className={styles.chart}>
-                <circle
-                    cx={SIZE / 2}
-                    cy={SIZE / 2}
-                    r={RADIUS}
-                    fill="none"
-                    stroke="var(--color-border)"
-                    strokeWidth={STROKE}
-                />
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className={styles.chart}>
+                <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--color-border)" strokeWidth={stroke} />
             </svg>
         );
     }
@@ -54,42 +48,36 @@ export function SprintStatusChart({ counts, total }: SprintStatusChartProps) {
     let cumulative = 0;
 
     return (
-        <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className={styles.chart}>
-            <circle
-                cx={SIZE / 2}
-                cy={SIZE / 2}
-                r={RADIUS}
-                fill="none"
-                stroke="var(--color-border)"
-                strokeWidth={STROKE}
-            />
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className={styles.chart}>
+            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--color-border)" strokeWidth={stroke} />
             {SPRINT_STATUS_ORDER.map(status => {
                 const value = counts[status];
                 if (value === 0) return null;
                 const fraction = value / total;
-                const length = fraction * CIRCUMFERENCE;
-                const offset = -cumulative * CIRCUMFERENCE;
+                const length = fraction * circumference;
+                const offset = -cumulative * circumference;
                 cumulative += fraction;
                 return (
                     <circle
                         key={status}
-                        cx={SIZE / 2}
-                        cy={SIZE / 2}
-                        r={RADIUS}
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
                         fill="none"
                         stroke={SPRINT_STATUS_COLOR[status]}
-                        strokeWidth={STROKE}
-                        strokeDasharray={`${length} ${CIRCUMFERENCE - length}`}
+                        strokeWidth={stroke}
+                        strokeDasharray={`${length} ${circumference - length}`}
                         strokeDashoffset={offset}
                     />
                 );
             })}
             <text
-                x={SIZE / 2}
-                y={SIZE / 2}
+                x={size / 2}
+                y={size / 2}
                 textAnchor="middle"
                 dominantBaseline="central"
                 className={styles.total}
+                style={{ fontSize }}
             >
                 {total}
             </text>

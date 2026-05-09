@@ -6,11 +6,13 @@ import { CreateSprintModal } from '../CreateSprintModal/CreateSprintModal';
 import { Activity } from '../../Kanban/ActivityCard/Activity';
 
 interface SprintToolbarProps {
+    projectId: string;
     canEdit?: boolean;
     activities: Activity[];
+    onCreated: () => void;
 }
 
-export function SprintToolbar({ canEdit = false, activities }: SprintToolbarProps) {
+export function SprintToolbar({ projectId, canEdit = false, activities, onCreated }: SprintToolbarProps) {
     const [open, setOpen] = useState(false);
 
     if (!canEdit) return null;
@@ -22,7 +24,14 @@ export function SprintToolbar({ canEdit = false, activities }: SprintToolbarProp
                     Criar Sprint
                 </button>
             </div>
-            {open && <CreateSprintModal activities={activities} onClose={() => setOpen(false)} />}
+            {open && (
+                <CreateSprintModal
+                    projectId={projectId}
+                    activities={activities}
+                    onClose={() => setOpen(false)}
+                    onCreated={onCreated}
+                />
+            )}
         </>
     );
 }

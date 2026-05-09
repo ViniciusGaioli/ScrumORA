@@ -10,7 +10,6 @@
 
 .total {
     font-family: var(--font-title);
-    font-size: 1.75rem;
     font-weight: 700;
     fill: var(--color-text);
     transform: rotate(90deg);

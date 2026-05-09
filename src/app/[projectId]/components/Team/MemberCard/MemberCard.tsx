@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect, useRef, useState } from 'react';
 import styles from './MemberCard.module.css';
 import { Member, MemberRole } from './Member';
+
+export type MemberMenuAction = 'edit' | 'remove';
 
 const IconMore = () => (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -31,28 +34,62 @@ interface MemberCardProps {
     member: Member;
     canEdit?: boolean;
     onMenuClick?: (member: Member) => void;
+    onActionClick?: (member: Member, action: MemberMenuAction) => void;
 }
 
-export function MemberCard({ member, canEdit = false, onMenuClick }: MemberCardProps) {
+export function MemberCard({ member, canEdit = false, onMenuClick, onActionClick }: MemberCardProps) {
     const accent = ROLE_COLOR[member.role];
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!menuOpen) return;
+        function handleClickOutside(e: MouseEvent) {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setMenuOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [menuOpen]);
+
+    function handleAction(action: MemberMenuAction) {
+        setMenuOpen(false);
+        onActionClick?.(member, action);
+    }
 
     return (
-        <div
-            className={styles.card}
-            style={{ '--accent': accent } as React.CSSProperties}
-        >
+        <div className={styles.card} style={{ '--accent': accent } as React.CSSProperties}>
             <div className={styles.accentBar} />
 
             <div className={styles.header}>
                 <span />
                 {canEdit && (
-                    <button
-                        className={styles.menuBtn}
-                        onClick={e => { e.stopPropagation(); onMenuClick?.(member); }}
-                        aria-label="Opções do integrante"
-                    >
-                        <IconMore />
-                    </button>
+                    onActionClick ? (
+                        <div className={styles.menuWrap} ref={menuRef}>
+                            <button
+                                className={styles.menuBtn}
+                                onClick={e => { e.stopPropagation(); setMenuOpen(v => !v); }}
+                                aria-label="Opções do integrante"
+                            >
+                                <IconMore />
+                            </button>
+                            {menuOpen && (
+                                <div className={styles.dropdown} onClick={e => e.stopPropagation()}>
+                                    <button className={styles.dropdownItem} onClick={() => handleAction('edit')}>Editar</button>
+                                    <button className={`${styles.dropdownItem} ${styles.dropdownItemDelete}`} onClick={() => handleAction('remove')}>Remover do projeto</button>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <button
+                            className={styles.menuBtn}
+                            onClick={e => { e.stopPropagation(); onMenuClick?.(member); }}
+                            aria-label="Opções do integrante"
+                        >
+                            <IconMore />
+                        </button>
+                    )
                 )}
             </div>
 
