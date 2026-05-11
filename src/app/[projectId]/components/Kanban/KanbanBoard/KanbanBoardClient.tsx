@@ -13,6 +13,7 @@ import { ActivityCard, ActivityMenuAction } from '../ActivityCard/ActivityCard';
 import { CreateActivityModal } from '../CreateActivityModal/CreateActivityModal';
 import { EditActivityModal } from '../EditActivityModal/EditActivityModal';
 import { Member, ProjectTeam } from '../../Team/MemberCard/Member';
+import { ApiSprintInfo } from '../../../services/activityService';
 
 const COL_PREFIX = 'col__';
 const SEP = '__';
@@ -51,14 +52,16 @@ interface Props {
     groupBy: 'team' | 'sprint';
     members: Member[];
     teams: ProjectTeam[];
+    sprints: ApiSprintInfo[];
     canEdit?: boolean;
     onCreated: () => void;
     onStatusChange: (activityId: number, newStatus: ActivityStatus) => void;
+    onGroupChange?: (activityId: number, oldGroupId: string, newGroupId: string) => void;
 }
 
 export function KanbanBoardClient({
-    projectId, activities, groupBy, members, teams,
-    canEdit = false, onCreated, onStatusChange,
+    projectId, activities, groupBy, members, teams, sprints,
+    canEdit = false, onCreated, onStatusChange, onGroupChange,
 }: Props) {
     const [items, setItems] = useState<Activity[]>(activities);
     const [activeCardId, setActiveCardId] = useState<string | null>(null);
@@ -77,7 +80,7 @@ export function KanbanBoardClient({
         }
     }, [activities]);
 
-    const groups = useMemo(() => groupActivities(items, groupBy), [items, groupBy]);
+    const groups = useMemo(() => groupActivities(items, groupBy, teams, sprints), [items, groupBy, teams, sprints]);
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -190,6 +193,33 @@ export function KanbanBoardClient({
         const original = activities.find(a => a.id === parsedActive.activityId);
         if (original && dropStatus && original.status !== dropStatus) {
             onStatusChange(parsedActive.activityId, dropStatus);
+        }
+
+        const targetGroupId: string | null = overCol?.groupId ?? parsedOver?.groupId ?? null;
+        if (targetGroupId && targetGroupId !== parsedActive.groupId && onGroupChange) {
+            onGroupChange(parsedActive.activityId, parsedActive.groupId, targetGroupId);
+
+            setItems(prev => prev.map(a => {
+                if (a.id !== parsedActive.activityId) return a;
+                if (groupBy === 'sprint') {
+                    if (targetGroupId === 'none') return { ...a, sprint: undefined };
+                    const newSprintId = Number(targetGroupId);
+                    if (Number.isNaN(newSprintId)) return a;
+                    const sprintInfo = sprints.find(s => s.id === newSprintId);
+                    return { ...a, sprint: sprintInfo ? { id: sprintInfo.id, name: sprintInfo.nome } : { id: newSprintId, name: '' } };
+                }
+                const oldTeamId = parsedActive.groupId === 'none' ? null : Number(parsedActive.groupId);
+                const newTeamId = targetGroupId === 'none' ? null : Number(targetGroupId);
+                let resp = a.responsibles;
+                if (oldTeamId !== null) {
+                    resp = resp.filter(r => !(r.team && r.team.id === oldTeamId));
+                }
+                if (newTeamId !== null && !resp.some(r => r.team && r.team.id === newTeamId)) {
+                    const team = teams.find(t => t.id === newTeamId);
+                    resp = [...resp, { team: { id: newTeamId, name: team?.name ?? '' } }];
+                }
+                return { ...a, responsibles: resp };
+            }));
         }
     }
 

@@ -148,3 +148,30 @@ export async function fetchActivityResponsibles(
         teamId: r.equipe?.id,
     }));
 }
+
+export async function addActivityTeam(
+    activityId: number,
+    teamId: number,
+    token: string,
+): Promise<boolean> {
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/atividade-responsavel`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ atividadeId: activityId, equipeIds: [teamId] }),
+        },
+    );
+    return res.ok;
+}
+
+export async function removeActivityResponsible(
+    arId: number,
+    token: string,
+): Promise<boolean> {
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/atividade-responsavel/${arId}`,
+        { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } },
+    );
+    return res.ok || res.status === 204;
+}

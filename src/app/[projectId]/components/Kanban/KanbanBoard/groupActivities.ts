@@ -1,24 +1,29 @@
 import { Activity } from '../ActivityCard/Activity';
 import { KanbanGroupData } from '../KanbanGroup/KanbanGroup';
+import { ProjectTeam } from '../../Team/MemberCard/Member';
+import { ApiSprintInfo } from '../../../services/activityService';
 
 type GroupBy = 'team' | 'sprint';
 
 export function groupActivities(
     activities: Activity[],
-    groupBy: GroupBy
+    groupBy: GroupBy,
+    allTeams: ProjectTeam[] = [],
+    allSprints: ApiSprintInfo[] = [],
 ): KanbanGroupData[] {
     const map = new Map<string, KanbanGroupData>();
 
     if (groupBy === 'team') {
+        map.set('none', { id: 'none', label: 'Sem equipe', activities: [] });
+        for (const team of allTeams) {
+            map.set(String(team.id), { id: String(team.id), label: team.name, activities: [] });
+        }
         for (const activity of activities) {
             const teams = activity.responsibles
                 .filter(r => r.team)
                 .map(r => r.team!);
 
             if (teams.length === 0) {
-                if (!map.has('none')) {
-                    map.set('none', { id: 'none', label: 'Sem equipe', activities: [] });
-                }
                 map.get('none')!.activities.push(activity);
                 continue;
             }
@@ -34,11 +39,16 @@ export function groupActivities(
     }
 
     if (groupBy === 'sprint') {
+        map.set('none', { id: 'none', label: 'Sem sprint', activities: [] });
+        for (const sprint of allSprints) {
+            map.set(String(sprint.id), {
+                id: String(sprint.id),
+                label: `Sprint ${sprint.id} - ${sprint.nome}`,
+                activities: [],
+            });
+        }
         for (const activity of activities) {
             if (!activity.sprint) {
-                if (!map.has('none')) {
-                    map.set('none', { id: 'none', label: 'Sem sprint', activities: [] });
-                }
                 map.get('none')!.activities.push(activity);
                 continue;
             }
@@ -56,8 +66,8 @@ export function groupActivities(
 
 function sortGroups(groups: KanbanGroupData[]): KanbanGroupData[] {
     return groups.sort((a, b) => {
-        if (a.id === 'none') return 1;
-        if (b.id === 'none') return -1;
+        if (a.id === 'none') return -1;
+        if (b.id === 'none') return 1;
         return a.label.localeCompare(b.label);
     });
 }
