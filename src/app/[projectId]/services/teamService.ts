@@ -44,13 +44,15 @@ export async function fetchTeamData(projectId: string, token: string): Promise<T
     const teams: ProjectTeam[] = teamsData.map(t => ({ id: t.id, name: t.nome }));
 
     const members: Member[] = membersData.map(m => {
-        const team = teamsData.find(t => t.usuarios?.some(u => u.id === m.usuario.id));
+        const teamIds = teamsData
+            .filter(t => t.usuarios?.some(u => u.id === m.usuario.id))
+            .map(t => t.id);
         return {
             id: m.usuario.id,
             name: m.usuario.nome,
             initials: toInitials(m.usuario.nome),
             role: mapRole(m.papel),
-            teamId: team?.id ?? null,
+            teamIds,
         };
     });
 
@@ -59,21 +61,33 @@ export async function fetchTeamData(projectId: string, token: string): Promise<T
 
 export function groupMembers(members: Member[], teams: ProjectTeam[]): TeamGroupData[] {
     const groups: TeamGroupData[] = [];
-
     groups.push({ id: 'all', label: 'Todos os integrantes', members, isUnassigned: true });
-
     for (const team of teams) {
         groups.push({
             id: `team-${team.id}`,
             label: team.name,
-            members: members.filter(m => m.teamId === team.id),
+            members: members.filter(m => m.teamIds.includes(team.id)),
         });
     }
-
-    const unassigned = members.filter(m => m.teamId === null);
-    if (unassigned.length > 0 && teams.length > 0) {
-        groups.push({ id: 'unassigned', label: 'Sem equipe', members: unassigned, isUnassigned: true });
-    }
-
     return groups;
+}
+
+export async function addMemberToTeam(
+    projectId: string, teamId: number, userId: number, token: string,
+): Promise<boolean> {
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/equipes/${teamId}/membros/${userId}`,
+        { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
+    );
+    return res.ok;
+}
+
+export async function removeMemberFromTeam(
+    projectId: string, teamId: number, userId: number, token: string,
+): Promise<boolean> {
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/equipes/${teamId}/membros/${userId}`,
+        { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } },
+    );
+    return res.ok || res.status === 204;
 }

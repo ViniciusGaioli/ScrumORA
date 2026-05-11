@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import styles from './MemberCard.module.css';
 import { Member, MemberRole } from './Member';
 
@@ -32,15 +34,22 @@ const ROLE_CLASS: Record<MemberRole, string> = {
 
 interface MemberCardProps {
     member: Member;
+    groupId?: string;
     canEdit?: boolean;
     onMenuClick?: (member: Member) => void;
     onActionClick?: (member: Member, action: MemberMenuAction) => void;
 }
 
-export function MemberCard({ member, canEdit = false, onMenuClick, onActionClick }: MemberCardProps) {
+export const MemberCard = memo(function MemberCard({ member, groupId, canEdit = false, onMenuClick, onActionClick }: MemberCardProps) {
     const accent = ROLE_COLOR[member.role];
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    const sortableId = groupId !== undefined ? `${groupId}__${member.id}` : `static__${member.id}`;
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: sortableId,
+        disabled: groupId === undefined || !canEdit,
+    });
 
     useEffect(() => {
         if (!menuOpen) return;
@@ -58,24 +67,37 @@ export function MemberCard({ member, canEdit = false, onMenuClick, onActionClick
         onActionClick?.(member, action);
     }
 
+    const cardStyle: React.CSSProperties = { '--accent': accent } as React.CSSProperties;
+    if (!isDragging) {
+        cardStyle.transform = CSS.Transform.toString(transform);
+        cardStyle.transition = transition;
+    }
+
     return (
-        <div className={styles.card} style={{ '--accent': accent } as React.CSSProperties}>
+        <div
+            ref={setNodeRef}
+            {...listeners}
+            {...attributes}
+            className={`${styles.card} ${isDragging ? styles.cardDragging : ''}`}
+            style={cardStyle}
+        >
             <div className={styles.accentBar} />
 
             <div className={styles.header}>
                 <span />
                 {canEdit && (
                     onActionClick ? (
-                        <div className={styles.menuWrap} ref={menuRef}>
+                        <div className={styles.menuWrap} ref={menuRef} onPointerDown={e => e.stopPropagation()}>
                             <button
                                 className={styles.menuBtn}
+                                onPointerDown={e => e.stopPropagation()}
                                 onClick={e => { e.stopPropagation(); setMenuOpen(v => !v); }}
                                 aria-label="Opções do integrante"
                             >
                                 <IconMore />
                             </button>
                             {menuOpen && (
-                                <div className={styles.dropdown} onClick={e => e.stopPropagation()}>
+                                <div className={styles.dropdown} onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
                                     <button className={styles.dropdownItem} onClick={() => handleAction('edit')}>Editar</button>
                                     <button className={`${styles.dropdownItem} ${styles.dropdownItemDelete}`} onClick={() => handleAction('remove')}>Remover do projeto</button>
                                 </div>
@@ -84,6 +106,7 @@ export function MemberCard({ member, canEdit = false, onMenuClick, onActionClick
                     ) : (
                         <button
                             className={styles.menuBtn}
+                            onPointerDown={e => e.stopPropagation()}
                             onClick={e => { e.stopPropagation(); onMenuClick?.(member); }}
                             aria-label="Opções do integrante"
                         >
@@ -106,4 +129,4 @@ export function MemberCard({ member, canEdit = false, onMenuClick, onActionClick
             <div className={styles.accentBarBottom} />
         </div>
     );
-}
+});

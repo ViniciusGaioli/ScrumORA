@@ -145,3 +145,7 @@
 .roleSm  { background: var(--color-role-sm-bg);  color: var(--color-role-sm-text); }
 .rolePo  { background: var(--color-role-po-bg);  color: var(--color-role-po-text); }
 .roleInt { background: var(--color-role-int-bg); color: var(--color-role-int-text); }
+
+.cardDragging {
+    visibility: hidden;
+}

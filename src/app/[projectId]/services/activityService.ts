@@ -1,7 +1,8 @@
-import { Activity, ActivityStatus } from "../components/Kanban/ActivityCard/Activity";
+import { Activity, ActivityResponsible, ActivityStatus } from "../components/Kanban/ActivityCard/Activity";
 
 type ApiResponsavel = {
-    usuario: { id: number; nome: string };
+    usuario?: { id: number; nome: string } | null;
+    equipe?: { id: number; nome: string } | null;
 };
 
 type ApiActivity = {
@@ -39,13 +40,23 @@ function mapActivity(a: ApiActivity): Activity {
         endDate: a.dataFim,
         archived: a.arquivada,
         sprint: a.sprint ? { id: a.sprint.id, name: a.sprint.nome } : undefined,
-        responsibles: (a.responsaveis ?? []).map(r => ({
-            user: {
-                id: r.usuario.id,
-                name: r.usuario.nome,
-                initials: toInitials(r.usuario.nome),
-            },
-        })),
+        responsibles: (a.responsaveis ?? []).map((r): ActivityResponsible | null => {
+            if (r.usuario) {
+                return {
+                    user: {
+                        id: r.usuario.id,
+                        name: r.usuario.nome,
+                        initials: toInitials(r.usuario.nome),
+                    },
+                };
+            }
+            if (r.equipe) {
+                return {
+                    team: { id: r.equipe.id, name: r.equipe.nome },
+                };
+            }
+            return null;
+        }).filter((r): r is ActivityResponsible => r !== null),
     };
 }
 
@@ -74,4 +85,66 @@ export async function fetchActivities(projectId: string, token: string): Promise
     if (!res.ok) return [];
     const data: ApiActivity[] = await res.json();
     return data.map(mapActivity);
+}
+
+const STATUS_TO_ETAPA: Record<ActivityStatus, string> = {
+    backlog:     'backlog',
+    development: 'desenvolvimento',
+    impediment:  'impedimento',
+    approval:    'aprovacao',
+    done:        'finalizada',
+};
+
+export async function updateActivityStatus(
+    projectId: string,
+    activityId: number,
+    newStatus: ActivityStatus,
+    token: string,
+): Promise<boolean> {
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/atividades/${activityId}`,
+        {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ etapa: STATUS_TO_ETAPA[newStatus] }),
+        },
+    );
+    return res.ok;
+}
+
+export async function updateActivitySprint(
+    projectId: string,
+    activityId: number,
+    sprintId: number | null,
+    status: ActivityStatus | null,
+    token: string,
+): Promise<boolean> {
+    const body: Record<string, unknown> = { sprintId };
+    if (status !== null) body.etapa = STATUS_TO_ETAPA[status];
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/projetos/${projectId}/atividades/${activityId}`,
+        {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify(body),
+        },
+    );
+    return res.ok;
+}
+
+export async function fetchActivityResponsibles(
+    activityId: number,
+    token: string,
+): Promise<Array<{ id: number; userId?: number; teamId?: number }>> {
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/atividade-responsavel?atividadeId=${activityId}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!res.ok) return [];
+    const data: Array<{ id: number; usuario?: { id: number } | null; equipe?: { id: number } | null }> = await res.json();
+    return data.map(r => ({
+        id: r.id,
+        userId: r.usuario?.id,
+        teamId: r.equipe?.id,
+    }));
 }

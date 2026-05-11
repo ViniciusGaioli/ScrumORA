@@ -1,3 +1,6 @@
+import { useMemo } from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import styles from './TeamGroup.module.css';
 import { Member } from '../MemberCard/Member';
 import { MemberCard } from '../MemberCard/MemberCard';
@@ -11,9 +14,13 @@ export interface TeamGroupData {
 
 interface TeamGroupProps {
     group: TeamGroupData;
+    canEdit?: boolean;
 }
 
-export function TeamGroup({ group }: TeamGroupProps) {
+export function TeamGroup({ group, canEdit = false }: TeamGroupProps) {
+    const { setNodeRef, isOver } = useDroppable({ id: `col__${group.id}` });
+    const itemIds = useMemo(() => group.members.map(m => `${group.id}__${m.id}`), [group.members, group.id]);
+
     return (
         <div className={styles.group}>
             <div className={styles.header}>
@@ -25,13 +32,17 @@ export function TeamGroup({ group }: TeamGroupProps) {
             </div>
 
             {group.members.length === 0 ? (
-                <p className={styles.empty}>Nenhum integrante nesta equipe.</p>
-            ) : (
-                <div className={styles.grid}>
-                    {group.members.map(member => (
-                        <MemberCard key={member.id} member={member} />
-                    ))}
+                <div ref={setNodeRef} className={isOver ? styles.gridOver : ''}>
+                    <p className={styles.empty}>Nenhum integrante nesta equipe.</p>
                 </div>
+            ) : (
+                <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+                    <div ref={setNodeRef} className={`${styles.grid} ${isOver ? styles.gridOver : ''}`}>
+                        {group.members.map(member => (
+                            <MemberCard key={member.id} member={member} groupId={group.id} canEdit={canEdit} />
+                        ))}
+                    </div>
+                </SortableContext>
             )}
         </div>
     );

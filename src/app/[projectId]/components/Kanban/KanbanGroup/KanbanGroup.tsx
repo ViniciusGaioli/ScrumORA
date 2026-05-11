@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useMemo } from 'react';
 import styles from './KanbanGroup.module.css';
 import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
 import { Activity, ActivityStatus } from '../ActivityCard/Activity';
@@ -21,6 +22,19 @@ interface KanbanGroupProps {
 }
 
 export function KanbanGroup({ group, canEdit = false, onActivityMenuClick, onAddActivity }: KanbanGroupProps) {
+    const byStatus = useMemo(() => {
+        const map: Record<ActivityStatus, Activity[]> = {
+            backlog: [], development: [], impediment: [], approval: [], done: [],
+        };
+        for (const a of group.activities) map[a.status].push(a);
+        return map;
+    }, [group.activities]);
+
+    const groupId = group.id;
+    const handleAdd = useCallback((s: ActivityStatus) => {
+        onAddActivity?.(s, groupId);
+    }, [onAddActivity, groupId]);
+
     return (
         <div className={styles.group}>
             <div className={styles.header}>
@@ -33,11 +47,12 @@ export function KanbanGroup({ group, canEdit = false, onActivityMenuClick, onAdd
                 {STATUSES.map(status => (
                     <KanbanColumn
                         key={status}
+                        groupId={groupId}
                         status={status}
-                        activities={group.activities.filter(a => a.status === status)}
+                        activities={byStatus[status]}
                         canEdit={canEdit}
                         onActivityMenuClick={onActivityMenuClick}
-                        onAddActivity={(s) => onAddActivity?.(s, group.id)}
+                        onAddActivity={handleAdd}
                     />
                 ))}
             </div>

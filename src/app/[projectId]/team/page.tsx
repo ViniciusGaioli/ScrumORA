@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import styles from './page.module.css';
-import { TeamBoard } from '../components/Team/TeamBoard/TeamBoard';
+import { TeamBoardClient } from '../components/Team/TeamBoard/TeamBoardClient';
 import { TeamToolbar } from '../components/Team/TeamToolbar/TeamToolbar';
-import { fetchTeamData, groupMembers } from '../services/teamService';
+import { fetchTeamData } from '../services/teamService';
 import { fetchUserRole } from '../services/projectService';
 import { Member, ProjectTeam } from '../components/Team/MemberCard/Member';
 import { UserRole } from '@/src/types/project';
@@ -36,7 +36,6 @@ export default function TeamPage() {
     useEffect(() => { load(); }, [projectId]);
 
     const canEdit = canUserEdit(userRole);
-    const groups = groupMembers(members, teams);
 
     return (
         <div className={styles.page}>
@@ -47,7 +46,13 @@ export default function TeamPage() {
                     members={members}
                     onCreated={load}
                 />
-                <TeamBoard groups={groups} />
+                <TeamBoardClient
+                    members={members}
+                    teams={teams}
+                    canEdit={canEdit}
+                    projectId={projectId}
+                    onRefresh={load}
+                />
             </main>
         </div>
     );

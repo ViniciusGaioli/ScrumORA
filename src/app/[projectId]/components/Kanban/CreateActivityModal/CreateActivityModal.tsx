@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styles from './CreateActivityModal.module.css';
 import { MemberCard } from '../../Team/MemberCard/MemberCard';
-import { Member } from '../../Team/MemberCard/Member';
+import { TeamResponsibleCard } from '../../Team/TeamResponsibleCard/TeamResponsibleCard';
+import { Member, ProjectTeam } from '../../Team/MemberCard/Member';
 import { ActivityStatus } from '../ActivityCard/Activity';
 
 const IconClose = () => (
@@ -17,6 +18,13 @@ const IconSearch = () => (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="7"/>
         <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+);
+
+const IconTeam = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="7" width="13" height="13" rx="2"/>
+        <path d="M8 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12"/>
     </svg>
 );
 
@@ -44,40 +52,68 @@ const STATUS_TO_ETAPA: Record<ActivityStatus, string> = {
     done:        'finalizada',
 };
 
+const memberKey = (id: number) => `u:${id}`;
+const teamKey = (id: number) => `t:${id}`;
+
 interface CreateActivityModalProps {
     projectId: string;
     status: ActivityStatus;
     members: Member[];
+    teams: ProjectTeam[];
     sprintId?: number;
     onClose: () => void;
     onCreated: () => void;
 }
 
-export function CreateActivityModal({ projectId, status, members, sprintId, onClose, onCreated }: CreateActivityModalProps) {
+export function CreateActivityModal({ projectId, status, members, teams, sprintId, onClose, onCreated }: CreateActivityModalProps) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [search, setSearch] = useState('');
+    const [searchOpen, setSearchOpen] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const searchWrapRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!searchOpen) return;
+        function handleClickOutside(e: MouseEvent) {
+            if (searchWrapRef.current && !searchWrapRef.current.contains(e.target as Node)) {
+                setSearchOpen(false);
+                setSearch('');
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [searchOpen]);
 
     const accent = STATUS_COLOR[status];
 
-    const selectedMembers = members.filter(m => selectedIds.includes(m.id));
-    const suggestions = members.filter(m =>
-        !selectedIds.includes(m.id) &&
+    const selectedMembers = members.filter(m => selectedIds.includes(memberKey(m.id)));
+    const selectedTeams = teams.filter(t => selectedIds.includes(teamKey(t.id)));
+
+    const memberSuggestions = members.filter(m =>
+        !selectedIds.includes(memberKey(m.id)) &&
         m.name.toLowerCase().includes(search.toLowerCase())
     );
+    const teamSuggestions = teams.filter(t =>
+        !selectedIds.includes(teamKey(t.id)) &&
+        t.name.toLowerCase().includes(search.toLowerCase())
+    );
 
-    const addMember = (id: number) => {
-        setSelectedIds(prev => [...prev, id]);
+    const addSelection = (key: string) => {
+        setSelectedIds(prev => [...prev, key]);
         setSearch('');
     };
 
     const removeMember = (member: Member) => {
-        setSelectedIds(prev => prev.filter(id => id !== member.id));
+        setSelectedIds(prev => prev.filter(k => k !== memberKey(member.id)));
+    };
+
+    const removeTeam = (team: { id: number; name: string }) => {
+        setSelectedIds(prev => prev.filter(k => k !== teamKey(team.id)));
     };
 
     async function handleSubmit() {
@@ -113,11 +149,14 @@ export function CreateActivityModal({ projectId, status, members, sprintId, onCl
             }
             const created = await res.json();
 
-            if (selectedIds.length > 0) {
+            const usuarioIds = selectedIds.filter(k => k.startsWith('u:')).map(k => Number(k.slice(2)));
+            const equipeIds = selectedIds.filter(k => k.startsWith('t:')).map(k => Number(k.slice(2)));
+
+            if (usuarioIds.length > 0 || equipeIds.length > 0) {
                 await fetch(`${process.env.NEXT_PUBLIC_API_URL}/atividade-responsavel`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                    body: JSON.stringify({ atividadeId: created.id, usuarioIds: selectedIds }),
+                    body: JSON.stringify({ atividadeId: created.id, usuarioIds, equipeIds }),
                 });
             }
 
@@ -129,6 +168,8 @@ export function CreateActivityModal({ projectId, status, members, sprintId, onCl
             setLoading(false);
         }
     }
+
+    const hasSuggestions = memberSuggestions.length > 0 || teamSuggestions.length > 0;
 
     return (
         <div className={styles.backdrop} onClick={onClose} role="presentation">
@@ -215,46 +256,94 @@ export function CreateActivityModal({ projectId, status, members, sprintId, onCl
                     <div className={styles.right}>
                         <div className={styles.rightHeader}>
                             <span className={styles.sectionTitle}>Responsáveis</span>
-                            <div className={styles.searchWrap}>
-                                <span className={styles.searchIcon}><IconSearch /></span>
-                                <input
-                                    type="text"
-                                    className={styles.searchInput}
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                    placeholder="Buscar integrante"
-                                />
-                                {suggestions.length > 0 && (
-                                    <ul className={styles.suggestions}>
-                                        {suggestions.map(m => (
-                                            <li key={m.id}>
-                                                <button
-                                                    type="button"
-                                                    className={styles.suggestionItem}
-                                                    onClick={() => addMember(m.id)}
-                                                >
-                                                    <span className={styles.suggestionInitials}>{m.initials}</span>
-                                                    <span>{m.name}</span>
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
+                            <div className={styles.searchWrap} ref={searchWrapRef}>
+                                {!searchOpen ? (
+                                    <button
+                                        type="button"
+                                        className={styles.searchToggle}
+                                        onClick={() => setSearchOpen(true)}
+                                        aria-label="Adicionar responsável"
+                                    >
+                                        <IconSearch />
+                                        <span>Adicionar</span>
+                                    </button>
+                                ) : (
+                                    <>
+                                        <span className={styles.searchIcon}><IconSearch /></span>
+                                        <input
+                                            type="text"
+                                            className={styles.searchInput}
+                                            value={search}
+                                            onChange={e => setSearch(e.target.value)}
+                                            onKeyDown={e => { if (e.key === 'Escape') { setSearchOpen(false); setSearch(''); } }}
+                                            placeholder="Buscar integrante ou equipe"
+                                            autoFocus
+                                        />
+                                        {hasSuggestions && (
+                                            <ul className={styles.suggestions}>
+                                                {memberSuggestions.map(m => (
+                                                    <li key={`u-${m.id}`}>
+                                                        <button
+                                                            type="button"
+                                                            className={styles.suggestionItem}
+                                                            onClick={() => addSelection(memberKey(m.id))}
+                                                        >
+                                                            <span className={styles.suggestionInitials}>{m.initials}</span>
+                                                            <span>{m.name}</span>
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                                {teamSuggestions.map(t => (
+                                                    <li key={`t-${t.id}`}>
+                                                        <button
+                                                            type="button"
+                                                            className={styles.suggestionItem}
+                                                            onClick={() => addSelection(teamKey(t.id))}
+                                                        >
+                                                            <span className={styles.suggestionInitials} style={{ background: 'var(--color-brand)' }}>
+                                                                <IconTeam />
+                                                            </span>
+                                                            <span>{t.name}</span>
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>
 
-                        {selectedMembers.length === 0 ? (
-                            <p className={styles.empty}>Nenhum integrante adicionado ainda.</p>
+                        {selectedIds.length === 0 ? (
+                            <p className={styles.empty}>Nenhum responsável adicionado ainda.</p>
                         ) : (
                             <div className={styles.responsiblesGrid}>
-                                {selectedMembers.map(member => (
-                                    <MemberCard
-                                        key={member.id}
-                                        member={member}
-                                        canEdit
-                                        onMenuClick={removeMember}
-                                    />
-                                ))}
+                                {selectedIds.map(key => {
+                                    if (key.startsWith('u:')) {
+                                        const member = selectedMembers.find(m => memberKey(m.id) === key);
+                                        if (!member) return null;
+                                        return (
+                                            <MemberCard
+                                                key={key}
+                                                member={member}
+                                                canEdit
+                                                onMenuClick={removeMember}
+                                            />
+                                        );
+                                    }
+                                    const team = selectedTeams.find(t => teamKey(t.id) === key);
+                                    if (!team) return null;
+                                    const teamMembers = members.filter(m => m.teamIds.includes(team.id));
+                                    return (
+                                        <TeamResponsibleCard
+                                            key={key}
+                                            team={team}
+                                            members={teamMembers}
+                                            canEdit
+                                            onRemove={removeTeam}
+                                        />
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

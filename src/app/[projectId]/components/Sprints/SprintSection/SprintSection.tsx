@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import styles from './SprintSection.module.css';
 import { Activity, ActivityStatus } from '../../Kanban/ActivityCard/Activity';
 import { ActivityCard, ActivityMenuAction } from '../../Kanban/ActivityCard/ActivityCard';
@@ -8,7 +10,7 @@ import { SprintStatusChart, SPRINT_STATUS_ORDER, SPRINT_STATUS_LABEL, SPRINT_STA
 import { CreateActivityModal } from '../../Kanban/CreateActivityModal/CreateActivityModal';
 import { EditActivityModal } from '../../Kanban/EditActivityModal/EditActivityModal';
 import { ApiSprintInfo } from '../../../services/activityService';
-import { Member } from '../../Team/MemberCard/Member';
+import { Member, ProjectTeam } from '../../Team/MemberCard/Member';
 import PlusIcon from '@/src/assets/icons/PlusIcon/PlusIcon';
 
 function formatDate(d: string) {
@@ -44,12 +46,13 @@ interface SprintSectionProps {
     productBacklog: Activity[];
     projectId: string;
     members: Member[];
+    teams: ProjectTeam[];
     canEdit?: boolean;
     onRefresh: () => void;
     onSprintMenuClick?: (sprint: ApiSprintInfo, action: SprintMenuAction) => void;
 }
 
-export function SprintSection({ sprint, sprintActivities, productBacklog, projectId, members, canEdit = false, onRefresh, onSprintMenuClick }: SprintSectionProps) {
+export function SprintSection({ sprint, sprintActivities, productBacklog, projectId, members, teams, canEdit = false, onRefresh, onSprintMenuClick }: SprintSectionProps) {
     const [createTarget, setCreateTarget] = useState<CreateTarget | null>(null);
     const [editTarget, setEditTarget] = useState<{ activity: Activity; tab: 'edit' | 'delete' } | null>(null);
     const [sprintMenuOpen, setSprintMenuOpen] = useState(false);
@@ -77,6 +80,14 @@ export function SprintSection({ sprint, sprintActivities, productBacklog, projec
 
     const backlog = sprintActivities.filter(a => a.status !== 'done');
     const concluded = sprintActivities.filter(a => a.status === 'done');
+
+    const pbDrop = useDroppable({ id: `pbcol__${sprint.id}` });
+    const sbDrop = useDroppable({ id: `sbcol__${sprint.id}` });
+    const ccDrop = useDroppable({ id: `cccol__${sprint.id}` });
+
+    const pbItemIds = useMemo(() => productBacklog.map(a => `${sprint.id}__${a.id}`), [productBacklog, sprint.id]);
+    const sbItemIds = useMemo(() => backlog.map(a => `${sprint.id}__${a.id}`), [backlog, sprint.id]);
+    const ccItemIds = useMemo(() => concluded.map(a => `${sprint.id}__${a.id}`), [concluded, sprint.id]);
 
     const counts = {
         backlog: sprintActivities.filter(a => a.status === 'backlog').length,
@@ -145,13 +156,14 @@ export function SprintSection({ sprint, sprintActivities, productBacklog, projec
                             <span className={styles.columnTitle}>Product Backlog</span>
                             <span className={styles.columnCount}>{productBacklog.length}</span>
                         </div>
-                        <div className={styles.cardsGrid}>
-                            {productBacklog.length === 0 ? (
+                        <div ref={pbDrop.setNodeRef} className={`${styles.cardsGrid} ${pbDrop.isOver ? styles.cardsOver : ''}`}>
+                            <SortableContext items={pbItemIds} strategy={verticalListSortingStrategy}>
+                                {productBacklog.map(a => (
+                                    <ActivityCard key={a.id} activity={a} groupId={String(sprint.id)} canEdit={canEdit} onMenuClick={handleMenuClick} />
+                                ))}
+                            </SortableContext>
+                            {productBacklog.length === 0 && (
                                 <p className={styles.empty} style={{ gridColumn: '1 / -1' }}>Nenhuma atividade no backlog.</p>
-                            ) : (
-                                productBacklog.map(a => (
-                                    <ActivityCard key={a.id} activity={a} canEdit={canEdit} onMenuClick={handleMenuClick} />
-                                ))
                             )}
                             {canEdit && (
                                 <button className={styles.addBtn} style={{ gridColumn: '1 / -1' }} onClick={() => setCreateTarget({ status: 'backlog' })}>
@@ -167,13 +179,14 @@ export function SprintSection({ sprint, sprintActivities, productBacklog, projec
                             <span className={styles.columnTitle}>Sprint Backlog</span>
                             <span className={styles.columnCount}>{backlog.length}</span>
                         </div>
-                        <div className={styles.cardsGrid}>
-                            {backlog.length === 0 ? (
+                        <div ref={sbDrop.setNodeRef} className={`${styles.cardsGrid} ${sbDrop.isOver ? styles.cardsOver : ''}`}>
+                            <SortableContext items={sbItemIds} strategy={verticalListSortingStrategy}>
+                                {backlog.map(a => (
+                                    <ActivityCard key={a.id} activity={a} groupId={String(sprint.id)} canEdit={canEdit} onMenuClick={handleMenuClick} />
+                                ))}
+                            </SortableContext>
+                            {backlog.length === 0 && (
                                 <p className={styles.empty} style={{ gridColumn: '1 / -1' }}>Nenhuma atividade em andamento.</p>
-                            ) : (
-                                backlog.map(a => (
-                                    <ActivityCard key={a.id} activity={a} canEdit={canEdit} onMenuClick={handleMenuClick} />
-                                ))
                             )}
                             {canEdit && (
                                 <button className={styles.addBtn} style={{ gridColumn: '1 / -1' }} onClick={() => setCreateTarget({ status: 'backlog', sprintId: sprint.id })}>
@@ -189,13 +202,14 @@ export function SprintSection({ sprint, sprintActivities, productBacklog, projec
                             <span className={styles.columnTitle}>Concluídas</span>
                             <span className={styles.columnCount}>{concluded.length}</span>
                         </div>
-                        <div className={styles.cardsGrid}>
-                            {concluded.length === 0 ? (
+                        <div ref={ccDrop.setNodeRef} className={`${styles.cardsGrid} ${ccDrop.isOver ? styles.cardsOver : ''}`}>
+                            <SortableContext items={ccItemIds} strategy={verticalListSortingStrategy}>
+                                {concluded.map(a => (
+                                    <ActivityCard key={a.id} activity={a} groupId={String(sprint.id)} canEdit={canEdit} onMenuClick={handleMenuClick} />
+                                ))}
+                            </SortableContext>
+                            {concluded.length === 0 && (
                                 <p className={styles.empty} style={{ gridColumn: '1 / -1' }}>Nenhuma atividade concluída.</p>
-                            ) : (
-                                concluded.map(a => (
-                                    <ActivityCard key={a.id} activity={a} canEdit={canEdit} onMenuClick={handleMenuClick} />
-                                ))
                             )}
                         </div>
                     </div>
@@ -210,6 +224,7 @@ export function SprintSection({ sprint, sprintActivities, productBacklog, projec
                     status={createTarget.status}
                     sprintId={createTarget.sprintId}
                     members={members}
+                    teams={teams}
                     onClose={() => setCreateTarget(null)}
                     onCreated={() => { onRefresh(); setCreateTarget(null); }}
                 />
@@ -220,6 +235,7 @@ export function SprintSection({ sprint, sprintActivities, productBacklog, projec
                     activity={editTarget.activity}
                     projectId={projectId}
                     members={members}
+                    teams={teams}
                     initialTab={editTarget.tab}
                     onClose={() => setEditTarget(null)}
                     onSaved={() => { onRefresh(); setEditTarget(null); }}

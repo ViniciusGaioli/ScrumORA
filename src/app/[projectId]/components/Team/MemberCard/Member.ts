@@ -5,7 +5,7 @@ export interface Member {
     name: string;
     initials: string;
     role: MemberRole;
-    teamId: number | null;
+    teamIds: number[];
 }
 
 export interface ProjectTeam {

@@ -49,3 +49,10 @@
     color: var(--color-text-placeholder);
     padding: 0.5rem 0;
 }
+
+.gridOver {
+    background: var(--color-brand-light);
+    outline: 1.5px dashed var(--color-brand-border);
+    outline-offset: -2px;
+    border-radius: 0.5rem;
+}

@@ -1,5 +1,8 @@
 "use client";
 
+import { memo, useMemo } from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import styles from './KanbanColumn.module.css';
 import { ActivityCard, ActivityMenuAction } from '../ActivityCard/ActivityCard';
 import { Activity, ActivityStatus } from '../ActivityCard/Activity';
@@ -14,6 +17,7 @@ const STATUS_CONFIG: Record<ActivityStatus, { label: string; color: string; }> =
 };
 
 interface KanbanColumnProps {
+    groupId: string;
     status: ActivityStatus;
     activities: Activity[];
     canEdit?: boolean;
@@ -21,8 +25,12 @@ interface KanbanColumnProps {
     onAddActivity?: (status: ActivityStatus) => void;
 }
 
-export function KanbanColumn({ status, activities, canEdit = false, onActivityMenuClick, onAddActivity }: KanbanColumnProps) {
+export const KanbanColumn = memo(function KanbanColumn({
+    groupId, status, activities, canEdit = false, onActivityMenuClick, onAddActivity,
+}: KanbanColumnProps) {
     const config = STATUS_CONFIG[status];
+    const { setNodeRef, isOver } = useDroppable({ id: `col__${groupId}__${status}` });
+    const itemIds = useMemo(() => activities.map(a => `${groupId}__${a.id}`), [activities, groupId]);
 
     return (
         <div className={styles.column}>
@@ -32,15 +40,21 @@ export function KanbanColumn({ status, activities, canEdit = false, onActivityMe
                 <span className={styles.count}>{activities.length}</span>
             </div>
 
-            <div className={styles.cards}>
-                {activities.map(activity => (
-                    <ActivityCard
-                        key={activity.id}
-                        activity={activity}
-                        canEdit={canEdit}
-                        onMenuClick={onActivityMenuClick}
-                    />
-                ))}
+            <div
+                ref={setNodeRef}
+                className={`${styles.cards} ${isOver ? styles.cardsOver : ''}`}
+            >
+                <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+                    {activities.map(activity => (
+                        <ActivityCard
+                            key={activity.id}
+                            activity={activity}
+                            groupId={groupId}
+                            canEdit={canEdit}
+                            onMenuClick={onActivityMenuClick}
+                        />
+                    ))}
+                </SortableContext>
 
                 {canEdit && (
                     <button className={styles.addBtn} onClick={() => onAddActivity?.(status)}>
@@ -51,4 +65,4 @@ export function KanbanColumn({ status, activities, canEdit = false, onActivityMe
             </div>
         </div>
     );
-}
+});

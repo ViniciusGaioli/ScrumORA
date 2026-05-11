@@ -38,6 +38,16 @@
     display: flex;
     flex-direction: column;
     gap: 7px;
+    border-radius: 0.5rem;
+    padding: 4px;
+    margin: -4px;
+    transition: background 0.15s;
+    min-height: 2rem;
+}
+
+.cardsOver {
+    background: var(--color-brand-light);
+    outline: 1.5px dashed var(--color-brand-border);
 }
 
 .addBtn {

@@ -5,12 +5,11 @@ import { useParams, useSearchParams } from "next/navigation";
 import styles from "./Page.module.css";
 import { GroupBy } from "../components/GroupBy/GroupBy";
 import { KanbanBoardClient } from "../components/Kanban/KanbanBoard/KanbanBoardClient";
-import { groupActivities } from "../components/Kanban/KanbanBoard/groupActivities";
-import { fetchActivities } from "../services/activityService";
+import { fetchActivities, updateActivityStatus } from "../services/activityService";
 import { fetchUserRole } from "../services/projectService";
 import { fetchTeamData } from "../services/teamService";
-import { Activity } from "../components/Kanban/ActivityCard/Activity";
-import { Member } from "../components/Team/MemberCard/Member";
+import { Activity, ActivityStatus } from "../components/Kanban/ActivityCard/Activity";
+import { Member, ProjectTeam } from "../components/Team/MemberCard/Member";
 import { UserRole } from "@/src/types/project";
 
 const GROUP_OPTIONS = [
@@ -30,23 +29,29 @@ function ActivitiesContent() {
     const [activities, setActivities] = useState<Activity[]>([]);
     const [userRole, setUserRole] = useState<UserRole>('member');
     const [members, setMembers] = useState<Member[]>([]);
+    const [teams, setTeams] = useState<ProjectTeam[]>([]);
+    const [boardKey, setBoardKey] = useState(0);
 
     function loadActivities(token: string) {
-        fetchActivities(projectId, token).then(setActivities);
+        fetchActivities(projectId, token).then(acts => {
+            setActivities(acts);
+            setBoardKey(k => k + 1);
+        });
     }
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
         if (!token) return;
-
         Promise.all([
             fetchActivities(projectId, token),
             fetchUserRole(projectId, token),
             fetchTeamData(projectId, token),
         ]).then(([acts, role, teamData]) => {
             setActivities(acts);
+            setBoardKey(k => k + 1);
             setUserRole(role);
             setMembers(teamData.members);
+            setTeams(teamData.teams);
         });
     }, [projectId]);
 
@@ -55,7 +60,14 @@ function ActivitiesContent() {
         if (token) loadActivities(token);
     }
 
-    const groups = groupActivities(activities, groupBy);
+    function handleStatusChange(activityId: number, newStatus: ActivityStatus) {
+        const token = localStorage.getItem('accessToken');
+        if (!token) return;
+        setActivities(prev => prev.map(a => a.id === activityId ? { ...a, status: newStatus } : a));
+        updateActivityStatus(projectId, activityId, newStatus, token)
+            .then(ok => { if (!ok) loadActivities(token); })
+            .catch(() => loadActivities(token));
+    }
 
     return (
         <div className={styles.page}>
@@ -64,11 +76,15 @@ function ActivitiesContent() {
                     <GroupBy options={GROUP_OPTIONS} paramKey="group" defaultValue="team" />
                 </div>
                 <KanbanBoardClient
+                    key={boardKey}
                     projectId={projectId}
-                    groups={groups}
+                    activities={activities}
+                    groupBy={groupBy}
                     members={members}
+                    teams={teams}
                     canEdit={canUserEdit(userRole)}
                     onCreated={handleCreated}
+                    onStatusChange={handleStatusChange}
                 />
             </main>
         </div>

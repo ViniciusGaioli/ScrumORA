@@ -316,3 +316,9 @@
     color: var(--color-brand);
     background: var(--color-brand-light);
 }
+
+.cardsOver {
+    background: var(--color-brand-light);
+    outline: 1.5px dashed var(--color-brand-border);
+    outline-offset: -2px;
+}

@@ -33,6 +33,10 @@
     opacity: 0.4;
 }
 
+.cardDragging {
+    visibility: hidden;
+}
+
 .card:hover {
     border-color: var(--color-brand-border);
     background: var(--color-brand-light);

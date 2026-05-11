@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styles from '../CreateActivityModal/CreateActivityModal.module.css';
 import tabStyles from './EditActivityModal.module.css';
 import { MemberCard } from '../../Team/MemberCard/MemberCard';
-import { Member } from '../../Team/MemberCard/Member';
+import { TeamResponsibleCard } from '../../Team/TeamResponsibleCard/TeamResponsibleCard';
+import { Member, ProjectTeam } from '../../Team/MemberCard/Member';
 import { Activity, ActivityStatus } from '../ActivityCard/Activity';
+import { fetchActivityResponsibles } from '../../../services/activityService';
 
 const IconClose = () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -16,6 +18,13 @@ const IconClose = () => (
 const IconSearch = () => (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+);
+
+const IconTeam = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="7" width="13" height="13" rx="2"/>
+        <path d="M8 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12"/>
     </svg>
 );
 
@@ -45,20 +54,24 @@ const STATUS_TO_ETAPA: Record<ActivityStatus, string> = {
 
 const STATUS_OPTIONS = Object.entries(STATUS_LABEL) as [ActivityStatus, string][];
 
+const memberKey = (id: number) => `u:${id}`;
+const teamKey = (id: number) => `t:${id}`;
+
 type Tab = 'edit' | 'delete';
 
-type ArEntry = { userId: number; arId: number };
+type ArEntry = { id: number; key: string };
 
 interface EditActivityModalProps {
     activity: Activity;
     projectId: string;
     members: Member[];
+    teams: ProjectTeam[];
     initialTab?: Tab;
     onClose: () => void;
     onSaved: () => void;
 }
 
-export function EditActivityModal({ activity, projectId, members, initialTab = 'edit', onClose, onSaved }: EditActivityModalProps) {
+export function EditActivityModal({ activity, projectId, members, teams, initialTab = 'edit', onClose, onSaved }: EditActivityModalProps) {
     const [tab, setTab] = useState<Tab>(initialTab);
 
     const [name, setName] = useState(activity.name);
@@ -66,11 +79,28 @@ export function EditActivityModal({ activity, projectId, members, initialTab = '
     const [startDate, setStartDate] = useState(activity.startDate?.slice(0, 10) ?? '');
     const [endDate, setEndDate] = useState(activity.endDate?.slice(0, 10) ?? '');
     const [status, setStatus] = useState<ActivityStatus>(activity.status);
-    const [selectedIds, setSelectedIds] = useState<number[]>(
-        activity.responsibles.filter(r => r.user).map(r => r.user!.id)
-    );
+    const initialSelected = activity.responsibles.flatMap(r => {
+        if (r.user) return [`u:${r.user.id}`];
+        if (r.team) return [`t:${r.team.id}`];
+        return [];
+    });
+    const [selectedIds, setSelectedIds] = useState<string[]>(initialSelected);
     const [search, setSearch] = useState('');
+    const [searchOpen, setSearchOpen] = useState(false);
     const [currentAr, setCurrentAr] = useState<ArEntry[]>([]);
+    const searchWrapRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!searchOpen) return;
+        function handleClickOutside(e: MouseEvent) {
+            if (searchWrapRef.current && !searchWrapRef.current.contains(e.target as Node)) {
+                setSearchOpen(false);
+                setSearch('');
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [searchOpen]);
 
     const [editError, setEditError] = useState('');
     const [editLoading, setEditLoading] = useState(false);
@@ -84,23 +114,40 @@ export function EditActivityModal({ activity, projectId, members, initialTab = '
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
         if (!token) return;
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/atividade-responsavel?atividadeId=${activity.id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-            .then(r => r.ok ? r.json() : [])
-            .then((data: { id: number; usuario: { id: number } }[]) => {
-                setCurrentAr(data.map(ar => ({ userId: ar.usuario.id, arId: ar.id })));
-            });
+        fetchActivityResponsibles(activity.id, token).then(rows => {
+            const entries: ArEntry[] = rows.map(r => {
+                if (r.userId !== undefined) return { id: r.id, key: memberKey(r.userId) };
+                if (r.teamId !== undefined) return { id: r.id, key: teamKey(r.teamId) };
+                return { id: r.id, key: '' };
+            }).filter(e => e.key !== '');
+            setCurrentAr(entries);
+        });
     }, [activity.id]);
 
-    const selectedMembers = members.filter(m => selectedIds.includes(m.id));
-    const suggestions = members.filter(m =>
-        !selectedIds.includes(m.id) &&
+    const selectedMembers = members.filter(m => selectedIds.includes(memberKey(m.id)));
+    const selectedTeams = teams.filter(t => selectedIds.includes(teamKey(t.id)));
+
+    const memberSuggestions = members.filter(m =>
+        !selectedIds.includes(memberKey(m.id)) &&
         m.name.toLowerCase().includes(search.toLowerCase())
     );
+    const teamSuggestions = teams.filter(t =>
+        !selectedIds.includes(teamKey(t.id)) &&
+        t.name.toLowerCase().includes(search.toLowerCase())
+    );
 
-    const addMember = (id: number) => { setSelectedIds(prev => [...prev, id]); setSearch(''); };
-    const removeMember = (member: Member) => setSelectedIds(prev => prev.filter(id => id !== member.id));
+    const addSelection = (key: string) => {
+        setSelectedIds(prev => [...prev, key]);
+        setSearch('');
+    };
+
+    const removeMember = (member: Member) => {
+        setSelectedIds(prev => prev.filter(k => k !== memberKey(member.id)));
+    };
+
+    const removeTeam = (team: { id: number; name: string }) => {
+        setSelectedIds(prev => prev.filter(k => k !== teamKey(team.id)));
+    };
 
     async function handleSave() {
         if (!name.trim() || !description.trim() || !startDate || !endDate) {
@@ -132,22 +179,25 @@ export function EditActivityModal({ activity, projectId, members, initialTab = '
                 return;
             }
 
-            const currentIds = currentAr.map(ar => ar.userId);
-            const toRemove = currentAr.filter(ar => !selectedIds.includes(ar.userId));
-            const toAdd = selectedIds.filter(id => !currentIds.includes(id));
+            const currentKeys = currentAr.map(ar => ar.key);
+            const toRemove = currentAr.filter(ar => !selectedIds.includes(ar.key));
+            const toAdd = selectedIds.filter(k => !currentKeys.includes(k));
 
             await Promise.all(toRemove.map(ar =>
-                fetch(`${process.env.NEXT_PUBLIC_API_URL}/atividade-responsavel/${ar.arId}`, {
+                fetch(`${process.env.NEXT_PUBLIC_API_URL}/atividade-responsavel/${ar.id}`, {
                     method: 'DELETE',
                     headers: { Authorization: `Bearer ${token}` },
                 })
             ));
 
-            if (toAdd.length > 0) {
+            const usuarioIds = toAdd.filter(k => k.startsWith('u:')).map(k => Number(k.slice(2)));
+            const equipeIds = toAdd.filter(k => k.startsWith('t:')).map(k => Number(k.slice(2)));
+
+            if (usuarioIds.length > 0 || equipeIds.length > 0) {
                 await fetch(`${process.env.NEXT_PUBLIC_API_URL}/atividade-responsavel`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                    body: JSON.stringify({ atividadeId: activity.id, usuarioIds: toAdd }),
+                    body: JSON.stringify({ atividadeId: activity.id, usuarioIds, equipeIds }),
                 });
             }
 
@@ -183,6 +233,8 @@ export function EditActivityModal({ activity, projectId, members, initialTab = '
             setDeleteLoading(false);
         }
     }
+
+    const hasSuggestions = memberSuggestions.length > 0 || teamSuggestions.length > 0;
 
     return (
         <div className={styles.backdrop} onClick={onClose} role="presentation">
@@ -252,36 +304,74 @@ export function EditActivityModal({ activity, projectId, members, initialTab = '
                             <div className={styles.right}>
                                 <div className={styles.rightHeader}>
                                     <span className={styles.sectionTitle}>Responsáveis</span>
-                                    <div className={styles.searchWrap}>
-                                        <span className={styles.searchIcon}><IconSearch /></span>
-                                        <input
-                                            type="text"
-                                            className={styles.searchInput}
-                                            value={search}
-                                            onChange={e => setSearch(e.target.value)}
-                                            placeholder="Buscar integrante"
-                                        />
-                                        {suggestions.length > 0 && (
-                                            <ul className={styles.suggestions}>
-                                                {suggestions.map(m => (
-                                                    <li key={m.id}>
-                                                        <button type="button" className={styles.suggestionItem} onClick={() => addMember(m.id)}>
-                                                            <span className={styles.suggestionInitials}>{m.initials}</span>
-                                                            <span>{m.name}</span>
-                                                        </button>
-                                                    </li>
-                                                ))}
-                                            </ul>
+                                    <div className={styles.searchWrap} ref={searchWrapRef}>
+                                        {!searchOpen ? (
+                                            <button
+                                                type="button"
+                                                className={styles.searchToggle}
+                                                onClick={() => setSearchOpen(true)}
+                                                aria-label="Adicionar responsável"
+                                            >
+                                                <IconSearch />
+                                                <span>Adicionar</span>
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <span className={styles.searchIcon}><IconSearch /></span>
+                                                <input
+                                                    type="text"
+                                                    className={styles.searchInput}
+                                                    value={search}
+                                                    onChange={e => setSearch(e.target.value)}
+                                                    onKeyDown={e => { if (e.key === 'Escape') { setSearchOpen(false); setSearch(''); } }}
+                                                    placeholder="Buscar integrante ou equipe"
+                                                    autoFocus
+                                                />
+                                                {hasSuggestions && (
+                                                    <ul className={styles.suggestions}>
+                                                        {memberSuggestions.map(m => (
+                                                            <li key={`u-${m.id}`}>
+                                                                <button type="button" className={styles.suggestionItem} onClick={() => addSelection(memberKey(m.id))}>
+                                                                    <span className={styles.suggestionInitials}>{m.initials}</span>
+                                                                    <span>{m.name}</span>
+                                                                </button>
+                                                            </li>
+                                                        ))}
+                                                        {teamSuggestions.map(t => (
+                                                            <li key={`t-${t.id}`}>
+                                                                <button type="button" className={styles.suggestionItem} onClick={() => addSelection(teamKey(t.id))}>
+                                                                    <span className={styles.suggestionInitials} style={{ background: 'var(--color-brand)' }}>
+                                                                        <IconTeam />
+                                                                    </span>
+                                                                    <span>{t.name}</span>
+                                                                </button>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                 </div>
-                                {selectedMembers.length === 0 ? (
-                                    <p className={styles.empty}>Nenhum integrante adicionado ainda.</p>
+                                {selectedIds.length === 0 ? (
+                                    <p className={styles.empty}>Nenhum responsável adicionado ainda.</p>
                                 ) : (
                                     <div className={styles.responsiblesGrid}>
-                                        {selectedMembers.map(member => (
-                                            <MemberCard key={member.id} member={member} canEdit onMenuClick={removeMember} />
-                                        ))}
+                                        {selectedIds.map(key => {
+                                            if (key.startsWith('u:')) {
+                                                const member = selectedMembers.find(m => memberKey(m.id) === key);
+                                                if (!member) return null;
+                                                return (
+                                                    <MemberCard key={key} member={member} canEdit onMenuClick={removeMember} />
+                                                );
+                                            }
+                                            const team = selectedTeams.find(t => teamKey(t.id) === key);
+                                            if (!team) return null;
+                                            const teamMembers = members.filter(m => m.teamIds.includes(team.id));
+                                            return (
+                                                <TeamResponsibleCard key={key} team={team} members={teamMembers} canEdit onRemove={removeTeam} />
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>

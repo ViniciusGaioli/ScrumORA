@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import styles from './ActivityCard.module.css';
 import { Activity } from './Activity';
 import CalendarIcon from '@/src/assets/icons/CalendarIcon/CalendarIcon';
@@ -47,15 +49,22 @@ function getAvatarColor(index: number): string {
 
 interface ActivityCardProps {
     activity: Activity;
+    groupId?: string;
     canEdit?: boolean;
     onMenuClick?: (activity: Activity, action: ActivityMenuAction) => void;
 }
 
-export function ActivityCard({ activity, canEdit = false, onMenuClick }: ActivityCardProps) {
+export const ActivityCard = memo(function ActivityCard({ activity, groupId, canEdit = false, onMenuClick }: ActivityCardProps) {
     const overdue = activity.status !== 'done' && isOverdue(activity.endDate);
     const accent = STATUS_COLOR[activity.status] ?? STATUS_COLOR.backlog;
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    const sortableId = groupId !== undefined ? `${groupId}__${activity.id}` : `static__${activity.id}`;
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: sortableId,
+        disabled: groupId === undefined || !canEdit,
+    });
 
     useEffect(() => {
         if (!menuOpen) return;
@@ -82,11 +91,20 @@ export function ActivityCard({ activity, canEdit = false, onMenuClick }: Activit
     const visibleResponsibles = allResponsibles.slice(0, MAX_VISIBLE_AVATARS);
     const extraCount = allResponsibles.length - MAX_VISIBLE_AVATARS;
 
+    const style: React.CSSProperties = { '--accent': accent } as React.CSSProperties;
+    if (!isDragging) {
+        style.transform = CSS.Transform.toString(transform);
+        style.transition = transition;
+    }
+
     return (
         <div
-            className={styles.card}
-            style={{ '--accent': accent } as React.CSSProperties}
-            onClick={() => onMenuClick?.(activity, 'edit')}
+            ref={setNodeRef}
+            className={`${styles.card} ${isDragging ? styles.cardDragging : ''}`}
+            style={style}
+            onClick={() => !isDragging && onMenuClick?.(activity, 'edit')}
+            {...listeners}
+            {...attributes}
         >
             <div className={styles.accentBar} />
             <div className={styles.top}>
@@ -144,4 +162,4 @@ export function ActivityCard({ activity, canEdit = false, onMenuClick }: Activit
             <div className={styles.accentBarBottom} />
         </div>
     );
-}
+});

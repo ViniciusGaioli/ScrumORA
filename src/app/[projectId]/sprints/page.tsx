@@ -3,14 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import styles from './page.module.css';
-import { SprintSection, SprintMenuAction } from '../components/Sprints/SprintSection/SprintSection';
+import { SprintMenuAction } from '../components/Sprints/SprintSection/SprintSection';
+import { SprintsKanbanClient } from '../components/Sprints/SprintsKanban/SprintsKanbanClient';
 import { SprintToolbar } from '../components/Sprints/SprintToolbar/SprintToolbar';
 import { EditSprintModal } from '../components/Sprints/EditSprintModal/EditSprintModal';
 import { fetchActivities, fetchSprints, ApiSprintInfo } from '../services/activityService';
 import { fetchUserRole } from '../services/projectService';
 import { fetchTeamData } from '../services/teamService';
 import { Activity } from '../components/Kanban/ActivityCard/Activity';
-import { Member } from '../components/Team/MemberCard/Member';
+import { Member, ProjectTeam } from '../components/Team/MemberCard/Member';
 import { UserRole } from '@/src/types/project';
 
 function canUserEdit(role: UserRole): boolean {
@@ -22,6 +23,7 @@ export default function SprintsPage() {
     const [sprints, setSprints] = useState<ApiSprintInfo[]>([]);
     const [activities, setActivities] = useState<Activity[]>([]);
     const [members, setMembers] = useState<Member[]>([]);
+    const [teams, setTeams] = useState<ProjectTeam[]>([]);
     const [userRole, setUserRole] = useState<UserRole>('member');
     const [sprintTarget, setSprintTarget] = useState<{ sprint: ApiSprintInfo; tab: 'edit' | 'delete' } | null>(null);
 
@@ -41,13 +43,13 @@ export default function SprintsPage() {
             setSprints(sprintsData.sort((a, b) => a.id - b.id));
             setActivities(activitiesData);
             setMembers(teamData.members);
+            setTeams(teamData.teams);
             setUserRole(role);
         });
     }
 
     useEffect(() => { load(); }, [projectId]);
 
-    const productBacklog = activities.filter(a => !a.sprint);
     const canEdit = canUserEdit(userRole);
 
     return (
@@ -63,19 +65,16 @@ export default function SprintsPage() {
                     <p className={styles.empty}>Nenhuma sprint encontrada. Crie a primeira sprint para começar.</p>
                 ) : (
                     <div className={styles.list}>
-                        {sprints.map(sprint => (
-                            <SprintSection
-                                key={sprint.id}
-                                sprint={sprint}
-                                sprintActivities={activities.filter(a => a.sprint?.id === sprint.id)}
-                                productBacklog={productBacklog}
-                                members={members}
-                                projectId={projectId}
-                                canEdit={canEdit}
-                                onRefresh={load}
-                                onSprintMenuClick={handleSprintMenu}
-                            />
-                        ))}
+                        <SprintsKanbanClient
+                            sprints={sprints}
+                            activities={activities}
+                            members={members}
+                            teams={teams}
+                            canEdit={canEdit}
+                            projectId={projectId}
+                            onRefresh={load}
+                            onSprintMenuClick={handleSprintMenu}
+                        />
                     </div>
                 )}
             </main>
