@@ -3,7 +3,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import styles from './TeamGroup.module.css';
 import { Member } from '../MemberCard/Member';
-import { MemberCard } from '../MemberCard/MemberCard';
+import { MemberCard, MemberMenuAction } from '../MemberCard/MemberCard';
 
 export interface TeamGroupData {
     id: string;
@@ -15,9 +15,10 @@ export interface TeamGroupData {
 interface TeamGroupProps {
     group: TeamGroupData;
     canEdit?: boolean;
+    onActionClick?: (member: Member, action: MemberMenuAction, groupId: string) => void;
 }
 
-export function TeamGroup({ group, canEdit = false }: TeamGroupProps) {
+export function TeamGroup({ group, canEdit = false, onActionClick }: TeamGroupProps) {
     const { setNodeRef, isOver } = useDroppable({ id: `col__${group.id}` });
     const itemIds = useMemo(() => group.members.map(m => `${group.id}__${m.id}`), [group.members, group.id]);
 
@@ -39,7 +40,7 @@ export function TeamGroup({ group, canEdit = false }: TeamGroupProps) {
                 <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                     <div ref={setNodeRef} className={`${styles.grid} ${isOver ? styles.gridOver : ''}`}>
                         {group.members.map(member => (
-                            <MemberCard key={member.id} member={member} groupId={group.id} canEdit={canEdit} />
+                            <MemberCard key={member.id} member={member} groupId={group.id} canEdit={canEdit} onActionClick={onActionClick ? (m, action, gId) => onActionClick(m, action, gId) : undefined} />
                         ))}
                     </div>
                 </SortableContext>

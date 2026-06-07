@@ -6,14 +6,9 @@ import { CSS } from '@dnd-kit/utilities';
 import styles from './ActivityCard.module.css';
 import { Activity } from './Activity';
 import CalendarIcon from '@/src/assets/icons/CalendarIcon/CalendarIcon';
+import MoreIcon from '@/src/assets/icons/MoreIcon/MoreIcon';
 
 export type ActivityMenuAction = 'edit' | 'delete';
-
-const IconMore = () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
-    </svg>
-);
 
 function formatDate(dateStr: string): string {
     const date = new Date(dateStr);
@@ -122,7 +117,7 @@ export const ActivityCard = memo(function ActivityCard({ activity, groupId, canE
                             onClick={e => { e.stopPropagation(); setMenuOpen(v => !v); }}
                             aria-label="Opções da atividade"
                         >
-                            <IconMore />
+                            <MoreIcon />
                         </button>
                         {menuOpen && (
                             <div className={styles.dropdown} onClick={e => e.stopPropagation()}>

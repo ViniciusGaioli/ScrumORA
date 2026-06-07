@@ -2,18 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import styles from './InviteMemberModal.module.css';
-
-const IconClose = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-    </svg>
-);
-
-const IconCopy = () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-    </svg>
-);
+import CloseIcon from '@/src/assets/icons/CloseIcon/CloseIcon';
+import CopyIcon from '@/src/assets/icons/CopyIcon/CopyIcon';
 
 interface InviteMemberModalProps {
     projectId: string;
@@ -96,7 +86,7 @@ export function InviteMemberModal({ projectId, onClose }: InviteMemberModalProps
                 <div className={styles.header}>
                     <h2 id="invite-member-title" className={styles.title}>Convidar integrante</h2>
                     <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar">
-                        <IconClose />
+                        <CloseIcon />
                     </button>
                 </div>
 
@@ -108,7 +98,7 @@ export function InviteMemberModal({ projectId, onClose }: InviteMemberModalProps
                             <div className={styles.linkRow}>
                                 <span className={styles.linkText}>{inviteLink}</span>
                                 <button type="button" className={styles.copyBtn} onClick={handleCopy}>
-                                    <IconCopy />{copied ? 'Copiado!' : 'Copiar'}
+                                    <CopyIcon />{copied ? 'Copiado!' : 'Copiar'}
                                 </button>
                             </div>
                         ) : (

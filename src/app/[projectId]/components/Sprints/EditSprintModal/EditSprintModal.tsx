@@ -15,17 +15,8 @@ const STATUS_OPTIONS: { value: SprintStatus; label: string }[] = [
     { value: 'cancelada',    label: 'Cancelada' },
 ];
 
-const IconClose = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-    </svg>
-);
-
-const IconWarn = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-    </svg>
-);
+import CloseIcon from '@/src/assets/icons/CloseIcon/CloseIcon';
+import WarnIcon from '@/src/assets/icons/WarnIcon/WarnIcon';
 
 interface EditSprintModalProps {
     sprint: ApiSprintInfo;
@@ -134,7 +125,7 @@ export function EditSprintModal({ sprint, projectId, initialTab = 'edit', onClos
                         </div>
                     </div>
                     <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar">
-                        <IconClose />
+                        <CloseIcon />
                     </button>
                 </div>
 
@@ -143,7 +134,7 @@ export function EditSprintModal({ sprint, projectId, initialTab = 'edit', onClos
                         <div className={tabStyles.editBody}>
                             {editError && (
                                 <div className={tabStyles.errorBanner}>
-                                    <IconWarn />
+                                    <WarnIcon />
                                     {editError}
                                 </div>
                             )}
@@ -187,7 +178,7 @@ export function EditSprintModal({ sprint, projectId, initialTab = 'edit', onClos
                     <>
                         <div className={tabStyles.editBody}>
                             <div className={tabStyles.deleteWarning}>
-                                <IconWarn />
+                                <WarnIcon />
                                 <div>
                                     <p className={tabStyles.deleteText}>
                                         Tem certeza que deseja excluir a sprint <strong>{sprint.nome}</strong>?

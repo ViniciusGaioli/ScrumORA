@@ -8,25 +8,9 @@ import { TeamResponsibleCard } from '../../Team/TeamResponsibleCard/TeamResponsi
 import { Member, ProjectTeam } from '../../Team/MemberCard/Member';
 import { Activity, ActivityStatus } from '../ActivityCard/Activity';
 import { fetchActivityResponsibles } from '../../../services/activityService';
-
-const IconClose = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-    </svg>
-);
-
-const IconSearch = () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
-);
-
-const IconTeam = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="7" width="13" height="13" rx="2"/>
-        <path d="M8 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12"/>
-    </svg>
-);
+import CloseIcon from '@/src/assets/icons/CloseIcon/CloseIcon';
+import SearchIcon from '@/src/assets/icons/SearchIcon/SearchIcon';
+import TeamIcon from '@/src/assets/icons/TeamIcon/TeamIcon';
 
 const STATUS_COLOR: Record<ActivityStatus, string> = {
     backlog:     'var(--color-status-backlog)',
@@ -260,7 +244,7 @@ export function EditActivityModal({ activity, projectId, members, teams, initial
                             <button className={`${tabStyles.tab} ${tab === 'delete' ? tabStyles.tabActive : ''} ${tabStyles.tabDelete}`} onClick={() => setTab('delete')}>Excluir</button>
                         </div>
                     </div>
-                    <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar"><IconClose /></button>
+                    <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar"><CloseIcon /></button>
                 </div>
 
                 {tab === 'edit' && (
@@ -312,12 +296,12 @@ export function EditActivityModal({ activity, projectId, members, teams, initial
                                                 onClick={() => setSearchOpen(true)}
                                                 aria-label="Adicionar responsável"
                                             >
-                                                <IconSearch />
+                                                <SearchIcon size={13} />
                                                 <span>Adicionar</span>
                                             </button>
                                         ) : (
                                             <>
-                                                <span className={styles.searchIcon}><IconSearch /></span>
+                                                <span className={styles.searchIcon}><SearchIcon size={13} /></span>
                                                 <input
                                                     type="text"
                                                     className={styles.searchInput}
@@ -341,7 +325,7 @@ export function EditActivityModal({ activity, projectId, members, teams, initial
                                                             <li key={`t-${t.id}`}>
                                                                 <button type="button" className={styles.suggestionItem} onClick={() => addSelection(teamKey(t.id))}>
                                                                     <span className={styles.suggestionInitials} style={{ background: 'var(--color-brand)' }}>
-                                                                        <IconTeam />
+                                                                        <TeamIcon />
                                                                     </span>
                                                                     <span>{t.name}</span>
                                                                 </button>

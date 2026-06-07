@@ -12,6 +12,7 @@ import { EditActivityModal } from '../../Kanban/EditActivityModal/EditActivityMo
 import { ApiSprintInfo } from '../../../services/activityService';
 import { Member, ProjectTeam } from '../../Team/MemberCard/Member';
 import PlusIcon from '@/src/assets/icons/PlusIcon/PlusIcon';
+import MoreIcon from '@/src/assets/icons/MoreIcon/MoreIcon';
 
 function formatDate(d: string) {
     return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
@@ -30,12 +31,6 @@ const STATUS_COLOR: Record<string, string> = {
     concluida:    'var(--color-status-done)',
     cancelada:    'var(--color-status-impediment)',
 };
-
-const IconMore = () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
-    </svg>
-);
 
 type CreateTarget = { status: ActivityStatus; sprintId?: number };
 export type SprintMenuAction = 'edit' | 'delete';
@@ -137,7 +132,7 @@ export function SprintSection({ sprint, sprintActivities, productBacklog, projec
                                     onClick={() => setSprintMenuOpen(v => !v)}
                                     aria-label="Opções da sprint"
                                 >
-                                    <IconMore />
+                                    <MoreIcon />
                                 </button>
                                 {sprintMenuOpen && (
                                     <div className={styles.dropdown}>

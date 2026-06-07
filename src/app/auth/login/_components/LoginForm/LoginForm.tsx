@@ -107,7 +107,7 @@ export function LoginForm({ onLogin, onForgotPassword, onRegister }: LoginFormPr
 
         <p className={styles.footer}>
             Não tem uma conta?{' '}
-            <button className={styles.footerLink} onClick={onRegister}>
+            <button className={styles.footerLink} onClick={() => (onRegister ? onRegister() : router.push('/auth/register'))}>
             Cadastre-se
             </button>
         </p>

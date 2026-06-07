@@ -1,6 +1,7 @@
 "use client";
 import styles from './RegisterForm.module.css';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AuthField } from '../../../components/AuthField/AuthField';
 import { AuthGoogleButton } from '../../../components/AuthGoogleButton/AuthGoogleButton';
 
@@ -10,6 +11,7 @@ interface RegisterFormProps {
 }
 
 export function RegisterForm({ onRegister, onLogin }: RegisterFormProps) {
+    const router = useRouter();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -58,7 +60,7 @@ export function RegisterForm({ onRegister, onLogin }: RegisterFormProps) {
                 </div>
                 <p className={styles.footer}>
                     Já tem uma conta?{' '}
-                    <button className={styles.footerLink} onClick={onLogin}>
+                    <button className={styles.footerLink} onClick={() => (onLogin ? onLogin() : router.push('/auth/login'))}>
                         Entrar
                     </button>
                 </p>
@@ -131,7 +133,7 @@ export function RegisterForm({ onRegister, onLogin }: RegisterFormProps) {
 
         <p className={styles.footer}>
             Já tem uma conta?{' '}
-            <button className={styles.footerLink} onClick={onLogin}>
+            <button className={styles.footerLink} onClick={() => (onLogin ? onLogin() : router.push('/auth/login'))}>
             Entrar
             </button>
         </p>

@@ -4,12 +4,7 @@ import { useEffect, useState } from 'react';
 import styles from '../../Kanban/CreateActivityModal/CreateActivityModal.module.css';
 import tabStyles from './EditMemberModal.module.css';
 import { Member, MemberRole } from '../MemberCard/Member';
-
-const IconClose = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-    </svg>
-);
+import CloseIcon from '@/src/assets/icons/CloseIcon/CloseIcon';
 
 const ROLE_LABEL: Record<MemberRole, string> = {
     scrum_master:  'Scrum Master',
@@ -138,7 +133,7 @@ export function EditMemberModal({ member, projectId, initialTab = 'edit', onClos
                             <button className={`${tabStyles.tab} ${tab === 'remove' ? tabStyles.tabActive : ''} ${tabStyles.tabDelete}`} onClick={() => setTab('remove')}>Remover</button>
                         </div>
                     </div>
-                    <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar"><IconClose /></button>
+                    <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar"><CloseIcon /></button>
                 </div>
 
                 {tab === 'edit' && (

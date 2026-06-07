@@ -8,22 +8,9 @@ import {
 
 interface GeneralVisionProps {
     activities: Activity[];
-    currentSprint?: {
-        id: number;
-        name: string;
-        endDate?: string;
-    };
 }
 
-function daysUntil(endDateStr: string): number {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const end = new Date(endDateStr);
-    end.setHours(0, 0, 0, 0);
-    return Math.round((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-}
-
-export function GeneralVision({ activities, currentSprint }: GeneralVisionProps) {
+export function GeneralVision({ activities }: GeneralVisionProps) {
     const total = activities.length;
 
     const counts: Record<ActivityStatus, number> = {
@@ -35,14 +22,9 @@ export function GeneralVision({ activities, currentSprint }: GeneralVisionProps)
     };
     for (const a of activities) counts[a.status]++;
 
-    const donePct = total > 0 ? Math.round((counts.done / total) * 100) : 0;
-
-    const daysLeft = currentSprint?.endDate ? daysUntil(currentSprint.endDate) : null;
-    const daysLabel =
-        daysLeft === null ? '—'
-        : daysLeft > 0 ? `${daysLeft}`
-        : daysLeft === 0 ? 'hoje'
-        : `${Math.abs(daysLeft)} atrás`;
+    const openCount = total - counts.done;
+    const doneCount = counts.done;
+    const donePct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
 
     return (
         <section className={styles.section}>
@@ -52,13 +34,13 @@ export function GeneralVision({ activities, currentSprint }: GeneralVisionProps)
 
             <div className={styles.topRow}>
                 <article className={styles.mainStat}>
-                    <span className={styles.statLabel}>Total de atividades</span>
-                    <span className={styles.statValue}>{total}</span>
+                    <span className={styles.statLabel}>Atividades em aberto</span>
+                    <span className={styles.statValue}>{openCount}</span>
                 </article>
 
                 <article className={styles.mainStat}>
-                    <span className={styles.statLabel}>Percentual concluído</span>
-                    <span className={styles.statValue}>{donePct}%</span>
+                    <span className={styles.statLabel}>Atividades concluídas</span>
+                    <span className={styles.statValue}>{doneCount}</span>
                     <div className={styles.progressTrack}>
                         <div
                             className={styles.progressFill}
@@ -68,13 +50,8 @@ export function GeneralVision({ activities, currentSprint }: GeneralVisionProps)
                 </article>
 
                 <article className={styles.mainStat}>
-                    <span className={styles.statLabel}>
-                        Dias restantes {currentSprint ? `— ${currentSprint.name}` : ''}
-                    </span>
-                    <span className={styles.statValue}>{daysLabel}</span>
-                    {daysLeft !== null && daysLeft < 0 && (
-                        <span className={styles.statHint}>sprint encerrada</span>
-                    )}
+                    <span className={styles.statLabel}>Impedimentos</span>
+                    <span className={styles.statValue}>{counts.impediment}</span>
                 </article>
             </div>
 

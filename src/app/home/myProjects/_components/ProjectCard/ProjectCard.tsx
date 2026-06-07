@@ -3,14 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './ProjectCard.module.css';
 import { Project, UserRole } from '@/src/types/project';
+import MoreIcon from '@/src/assets/icons/MoreIcon/MoreIcon';
 
 export type ProjectMenuAction = 'edit' | 'share' | 'delete';
-
-const IconMore = () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
-    </svg>
-);
 
 const ACCENT_BY_ROLE: Record<UserRole, string> = {
     scrum_master:  '#534AB7',
@@ -79,7 +74,7 @@ export function ProjectCard({ project, onClick, onMenuClick }: ProjectCardProps)
                         onClick={e => { e.stopPropagation(); setMenuOpen(v => !v); }}
                         aria-label="Opções do projeto"
                     >
-                        <IconMore />
+                        <MoreIcon />
                     </button>
                     {menuOpen && (
                         <div className={styles.dropdown} onClick={e => e.stopPropagation()}>

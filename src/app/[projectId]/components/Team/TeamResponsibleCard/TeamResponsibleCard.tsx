@@ -3,12 +3,7 @@
 import { memo } from 'react';
 import styles from './TeamResponsibleCard.module.css';
 import { Member, MemberRole } from '../MemberCard/Member';
-
-const IconMore = () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
-    </svg>
-);
+import MoreIcon from '@/src/assets/icons/MoreIcon/MoreIcon';
 
 const ROLE_COLOR: Record<MemberRole, string> = {
     scrum_master:  'var(--color-brand)',
@@ -48,7 +43,7 @@ export const TeamResponsibleCard = memo(function TeamResponsibleCard({ team, mem
                         onClick={e => { e.stopPropagation(); onRemove?.(team); }}
                         aria-label="Remover equipe"
                     >
-                        <IconMore />
+                        <MoreIcon />
                     </button>
                 )}
             </div>

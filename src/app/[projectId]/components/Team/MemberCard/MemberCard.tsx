@@ -5,14 +5,9 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import styles from './MemberCard.module.css';
 import { Member, MemberRole } from './Member';
+import MoreIcon from '@/src/assets/icons/MoreIcon/MoreIcon';
 
-export type MemberMenuAction = 'edit' | 'remove';
-
-const IconMore = () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
-    </svg>
-);
+export type MemberMenuAction = 'edit' | 'remove' | 'remove-from-team';
 
 const ROLE_COLOR: Record<MemberRole, string> = {
     scrum_master:  'var(--color-brand)',
@@ -37,7 +32,7 @@ interface MemberCardProps {
     groupId?: string;
     canEdit?: boolean;
     onMenuClick?: (member: Member) => void;
-    onActionClick?: (member: Member, action: MemberMenuAction) => void;
+    onActionClick?: (member: Member, action: MemberMenuAction, groupId: string) => void;
 }
 
 export const MemberCard = memo(function MemberCard({ member, groupId, canEdit = false, onMenuClick, onActionClick }: MemberCardProps) {
@@ -64,7 +59,7 @@ export const MemberCard = memo(function MemberCard({ member, groupId, canEdit = 
 
     function handleAction(action: MemberMenuAction) {
         setMenuOpen(false);
-        onActionClick?.(member, action);
+        onActionClick?.(member, action, groupId ?? '');
     }
 
     const cardStyle: React.CSSProperties = { '--accent': accent } as React.CSSProperties;
@@ -94,11 +89,14 @@ export const MemberCard = memo(function MemberCard({ member, groupId, canEdit = 
                                 onClick={e => { e.stopPropagation(); setMenuOpen(v => !v); }}
                                 aria-label="Opções do integrante"
                             >
-                                <IconMore />
+                                <MoreIcon />
                             </button>
                             {menuOpen && (
                                 <div className={styles.dropdown} onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
                                     <button className={styles.dropdownItem} onClick={() => handleAction('edit')}>Editar</button>
+                                    {groupId && !groupId.startsWith('all') && (
+                                        <button className={`${styles.dropdownItem} ${styles.dropdownItemDelete}`} onClick={() => handleAction('remove-from-team')}>Remover da equipe</button>
+                                    )}
                                     <button className={`${styles.dropdownItem} ${styles.dropdownItemDelete}`} onClick={() => handleAction('remove')}>Remover do projeto</button>
                                 </div>
                             )}
@@ -110,7 +108,7 @@ export const MemberCard = memo(function MemberCard({ member, groupId, canEdit = 
                             onClick={e => { e.stopPropagation(); onMenuClick?.(member); }}
                             aria-label="Opções do integrante"
                         >
-                            <IconMore />
+                            <MoreIcon />
                         </button>
                     )
                 )}

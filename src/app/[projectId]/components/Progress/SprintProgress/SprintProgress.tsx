@@ -2,25 +2,36 @@
 
 import { useMemo, useState } from 'react';
 import styles from './SprintProgress.module.css';
-import { Activity } from '../../Kanban/ActivityCard/Activity';
-import { ProjectTeam } from '../../Team/MemberCard/Member';
-import { LineChart, LineSeries } from '../LineChart/LineChart';
-
-const PALETTE = [
-    'var(--color-avatar-1)',
-    'var(--color-avatar-2)',
-    'var(--color-avatar-3)',
-    'var(--color-avatar-4)',
-    'var(--color-avatar-5)',
-    'var(--color-avatar-6)',
-];
+import { Activity, ActivityStatus } from '../../Kanban/ActivityCard/Activity';
+import { ApiSprintInfo } from '../../../services/activityService';
+import { SPRINT_STATUS_ORDER, SPRINT_STATUS_COLOR, SPRINT_STATUS_LABEL } from '../../Sprints/SprintStatusChart/SprintStatusChart';
 
 interface SprintProgressProps {
     activities: Activity[];
-    teams: ProjectTeam[];
+    sprints: ApiSprintInfo[];
 }
 
-function diffInDays(from: string, to: string): number {
+interface BarDay {
+    date: string;
+    total: number;
+    segments: { status: ActivityStatus; count: number }[];
+}
+
+const CHART_W = 640;
+const CHART_H = 260;
+const PAD = { top: 16, right: 20, bottom: 48, left: 36 };
+
+function toDateKey(iso: string): string {
+    return iso.slice(0, 10);
+}
+
+function addDays(dateStr: string, n: number): string {
+    const d = new Date(dateStr);
+    d.setDate(d.getDate() + n);
+    return toDateKey(d.toISOString());
+}
+
+function diffDays(from: string, to: string): number {
     const a = new Date(from);
     const b = new Date(to);
     a.setHours(0, 0, 0, 0);
@@ -28,155 +39,216 @@ function diffInDays(from: string, to: string): number {
     return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function buildSprintSeries(activities: Activity[]): LineSeries[] {
-    const sprintMap = new Map<number, { name: string; startDate: string; activities: Activity[] }>();
+function formatDateLabel(dateStr: string): string {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+
+function buildBars(sprint: ApiSprintInfo, activities: Activity[]): BarDay[] {
+    const start = toDateKey(sprint.dataInicio);
+    const end = toDateKey(sprint.dataFim);
+    const duration = diffDays(start, end);
+
+    const byDate: Record<string, Record<ActivityStatus, number>> = {};
+    for (let i = 0; i <= duration; i++) {
+        const key = addDays(start, i);
+        byDate[key] = { backlog: 0, development: 0, impediment: 0, approval: 0, done: 0 };
+    }
+
     for (const a of activities) {
-        if (!a.sprint?.startDate) continue;
-        const existing = sprintMap.get(a.sprint.id);
-        if (existing) {
-            existing.activities.push(a);
-        } else {
-            sprintMap.set(a.sprint.id, {
-                name: a.sprint.name,
-                startDate: a.sprint.startDate,
-                activities: [a],
-            });
+        const key = toDateKey(a.endDate);
+        if (key in byDate) {
+            byDate[key][a.status]++;
         }
     }
 
-    const series: LineSeries[] = [];
-    let colorIdx = 0;
-    for (const [id, data] of Array.from(sprintMap.entries()).sort((a, b) => a[0] - b[0])) {
-        const doneItems = data.activities
-            .filter(a => a.status === 'done')
-            .map(a => diffInDays(data.startDate, a.endDate))
-            .filter(d => d >= 0)
-            .sort((a, b) => a - b);
-
-        const lastDay = data.activities.reduce((max, a) => {
-            const d = diffInDays(data.startDate, a.endDate);
-            return d > max ? d : max;
-        }, 0);
-
-        const duration = Math.max(lastDay, 1);
-        const points: number[] = [];
-        let idx = 0;
-        let cumulative = 0;
-        for (let d = 0; d <= duration; d++) {
-            while (idx < doneItems.length && doneItems[idx] <= d) {
-                cumulative++;
-                idx++;
-            }
-            points.push(cumulative);
-        }
-
-        series.push({
-            id,
-            label: `Sprint ${id} - ${data.name}`,
-            color: PALETTE[colorIdx % PALETTE.length],
-            points,
-        });
-        colorIdx++;
-    }
-    return series;
+    return Object.entries(byDate).map(([date, counts]) => {
+        const segments = SPRINT_STATUS_ORDER
+            .filter(s => counts[s] > 0)
+            .map(s => ({ status: s, count: counts[s] }));
+        const total = segments.reduce((sum, s) => sum + s.count, 0);
+        return { date, total, segments };
+    });
 }
 
-function buildTeamSeries(activities: Activity[], teams: ProjectTeam[]): LineSeries[] {
-    const starts = activities.map(a => new Date(a.startDate).getTime());
-    if (starts.length === 0) return [];
-    const projectStart = new Date(Math.min(...starts)).toISOString();
+export function SprintProgress({ activities, sprints }: SprintProgressProps) {
+    const [selectedSprintId, setSelectedSprintId] = useState<number | null>(null);
 
-    const series: LineSeries[] = [];
-    let colorIdx = 0;
-    for (const team of teams) {
-        const teamActivities = activities.filter(a =>
-            a.responsibles.some(r => r.team?.id === team.id)
-        );
-        const doneItems = teamActivities
-            .filter(a => a.status === 'done')
-            .map(a => diffInDays(projectStart, a.endDate))
-            .filter(d => d >= 0)
-            .sort((a, b) => a - b);
+    const sprintId = selectedSprintId ?? sprints[0]?.id ?? null;
+    const sprint = sprints.find(s => s.id === sprintId) ?? null;
 
-        const lastDay = activities.reduce((max, a) => {
-            const d = diffInDays(projectStart, a.endDate);
-            return d > max ? d : max;
-        }, 0);
+    const sprintActivities = useMemo(
+        () => activities.filter(a => a.sprint?.id === sprintId),
+        [activities, sprintId],
+    );
 
-        const points: number[] = [];
-        let idx = 0;
-        let cumulative = 0;
-        for (let d = 0; d <= lastDay; d++) {
-            while (idx < doneItems.length && doneItems[idx] <= d) {
-                cumulative++;
-                idx++;
-            }
-            points.push(cumulative);
-        }
+    const bars = useMemo(
+        () => (sprint ? buildBars(sprint, sprintActivities) : []),
+        [sprint, sprintActivities],
+    );
 
-        series.push({
-            id: `team-${team.id}`,
-            label: team.name,
-            color: PALETTE[colorIdx % PALETTE.length],
-            points,
-        });
-        colorIdx++;
-    }
-    return series;
-}
+    const maxY = Math.max(1, ...bars.map(b => b.total));
+    const innerW = CHART_W - PAD.left - PAD.right;
+    const innerH = CHART_H - PAD.top - PAD.bottom;
 
-type Mode = 'sprint' | 'team';
+    const barCount = bars.length;
+    const barW = Math.max((innerW / Math.max(barCount, 1)) * 0.55, 2);
 
-export function SprintProgress({ activities, teams }: SprintProgressProps) {
-    const [mode, setMode] = useState<Mode>('sprint');
+    const xAt = (i: number) => PAD.left + (i + 0.5) * (innerW / Math.max(barCount, 1));
+    const yAt = (v: number) => PAD.top + innerH - (v / maxY) * innerH;
 
-    const sprintSeries = useMemo(() => buildSprintSeries(activities), [activities]);
-    const teamSeries = useMemo(() => buildTeamSeries(activities, teams), [activities, teams]);
+    const yTicks = Math.min(maxY, 5);
+    const yTickValues = Array.from({ length: yTicks + 1 }, (_, i) =>
+        Math.round((maxY * i) / yTicks),
+    );
 
-    const currentSeries = mode === 'sprint' ? sprintSeries : teamSeries;
-    const title = mode === 'sprint' ? 'Comparação entre sprints' : 'Velocidade por equipe';
-    const yLabel = 'Atividades concluídas';
-    const xLabel = mode === 'sprint' ? 'Dia da sprint' : 'Dia do projeto';
+    const xLabelStep = barCount <= 10 ? 1 : barCount <= 20 ? 2 : Math.ceil(barCount / 10);
+
+    const legendStatuses = SPRINT_STATUS_ORDER.filter(s =>
+        bars.some(b => b.segments.some(seg => seg.status === s)),
+    );
 
     return (
         <section className={styles.section}>
             <header className={styles.header}>
                 <div>
                     <h2 className={styles.title}>Progresso das sprints</h2>
-                    <p className={styles.subtitle}>
-                        Atividades concluídas acumuladas ao longo do tempo.
-                    </p>
+                    <p className={styles.subtitle}>Atividades por prazo dentro da sprint.</p>
                 </div>
-                <div className={styles.toggle} role="tablist">
-                    <button
-                        type="button"
-                        role="tab"
-                        aria-selected={mode === 'sprint'}
-                        className={`${styles.toggleBtn} ${mode === 'sprint' ? styles.toggleBtnActive : ''}`}
-                        onClick={() => setMode('sprint')}
+                {sprints.length > 0 && (
+                    <select
+                        className={styles.sprintSelect}
+                        value={sprintId ?? ''}
+                        onChange={e => setSelectedSprintId(Number(e.target.value))}
                     >
-                        Por sprint
-                    </button>
-                    <button
-                        type="button"
-                        role="tab"
-                        aria-selected={mode === 'team'}
-                        className={`${styles.toggleBtn} ${mode === 'team' ? styles.toggleBtnActive : ''}`}
-                        onClick={() => setMode('team')}
-                    >
-                        Por equipe
-                    </button>
-                </div>
+                        {sprints.map(s => (
+                            <option key={s.id} value={s.id}>{s.nome}</option>
+                        ))}
+                    </select>
+                )}
             </header>
 
-            <div className={styles.chartWrap}>
-                <h3 className={styles.chartTitle}>{title}</h3>
-                {currentSeries.length === 0 ? (
-                    <p className={styles.empty}>Sem dados para exibir.</p>
-                ) : (
-                    <LineChart series={currentSeries} xLabel={xLabel} yLabel={yLabel} />
-                )}
-            </div>
+            {!sprint || bars.length === 0 ? (
+                <p className={styles.empty}>Sem dados para exibir.</p>
+            ) : (
+                <>
+                    <svg
+                        viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+                        className={styles.svg}
+                        role="img"
+                        aria-label="Gráfico de atividades por prazo"
+                    >
+                        {yTickValues.map((t, i) => (
+                            <g key={`y-${i}`}>
+                                <line
+                                    x1={PAD.left} y1={yAt(t)}
+                                    x2={CHART_W - PAD.right} y2={yAt(t)}
+                                    stroke="var(--color-border)"
+                                    strokeWidth={1}
+                                    strokeDasharray="2 3"
+                                />
+                                <text
+                                    x={PAD.left - 6}
+                                    y={yAt(t)}
+                                    textAnchor="end"
+                                    dominantBaseline="central"
+                                    className={styles.axisText}
+                                >
+                                    {t}
+                                </text>
+                            </g>
+                        ))}
+
+                        <line
+                            x1={PAD.left} y1={PAD.top + innerH}
+                            x2={CHART_W - PAD.right} y2={PAD.top + innerH}
+                            stroke="var(--color-border-hover)" strokeWidth={1}
+                        />
+                        <line
+                            x1={PAD.left} y1={PAD.top}
+                            x2={PAD.left} y2={PAD.top + innerH}
+                            stroke="var(--color-border-hover)" strokeWidth={1}
+                        />
+
+                        {bars.map((b, i) => {
+                            const x = xAt(i);
+                            let stackY = PAD.top + innerH;
+                            return (
+                                <g key={b.date}>
+                                    {b.segments.map(seg => {
+                                        const segH = (seg.count / maxY) * innerH;
+                                        stackY -= segH;
+                                        return (
+                                            <rect
+                                                key={seg.status}
+                                                x={x - barW / 2}
+                                                y={stackY}
+                                                width={barW}
+                                                height={segH}
+                                                fill={SPRINT_STATUS_COLOR[seg.status]}
+                                                rx={seg === b.segments[b.segments.length - 1] ? 2 : 0}
+                                            />
+                                        );
+                                    })}
+                                    {b.total > 0 && (
+                                        <text
+                                            x={x}
+                                            y={yAt(b.total) - 4}
+                                            textAnchor="middle"
+                                            className={styles.barLabel}
+                                            fill={SPRINT_STATUS_COLOR[b.segments[b.segments.length - 1].status]}
+                                        >
+                                            {b.total}
+                                        </text>
+                                    )}
+                                    {i % xLabelStep === 0 && (
+                                        <text
+                                            x={x}
+                                            y={PAD.top + innerH + 14}
+                                            textAnchor="middle"
+                                            className={styles.axisText}
+                                        >
+                                            {formatDateLabel(b.date)}
+                                        </text>
+                                    )}
+                                </g>
+                            );
+                        })}
+
+                        <text
+                            x={CHART_W - PAD.right}
+                            y={PAD.top + innerH + 36}
+                            textAnchor="end"
+                            className={styles.axisLabel}
+                        >
+                            Prazo
+                        </text>
+                        <text
+                            x={-(PAD.top + innerH / 2)}
+                            y={12}
+                            textAnchor="middle"
+                            transform="rotate(-90)"
+                            className={styles.axisLabel}
+                        >
+                            Atividades
+                        </text>
+                    </svg>
+
+                    {legendStatuses.length > 0 && (
+                        <ul className={styles.legend}>
+                            {legendStatuses.map(s => (
+                                <li key={s} className={styles.legendItem}>
+                                    <span
+                                        className={styles.legendDot}
+                                        style={{ background: SPRINT_STATUS_COLOR[s] }}
+                                    />
+                                    {SPRINT_STATUS_LABEL[s]}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </>
+            )}
         </section>
     );
 }

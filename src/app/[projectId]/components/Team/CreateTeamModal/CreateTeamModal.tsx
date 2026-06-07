@@ -1,23 +1,11 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styles from '../../Kanban/CreateActivityModal/CreateActivityModal.module.css';
 import { MemberCard } from '../MemberCard/MemberCard';
 import { Member } from '../MemberCard/Member';
-
-const IconClose = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-    </svg>
-);
-
-const IconSearch = () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="7"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
-);
+import CloseIcon from '@/src/assets/icons/CloseIcon/CloseIcon';
+import SearchIcon from '@/src/assets/icons/SearchIcon/SearchIcon';
 
 interface CreateTeamModalProps {
     projectId: string;
@@ -30,8 +18,22 @@ export function CreateTeamModal({ projectId, members, onClose, onCreated }: Crea
     const [name, setName] = useState('');
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [search, setSearch] = useState('');
+    const [searchOpen, setSearchOpen] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const searchWrapRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!searchOpen) return;
+        function handleClickOutside(e: MouseEvent) {
+            if (searchWrapRef.current && !searchWrapRef.current.contains(e.target as Node)) {
+                setSearchOpen(false);
+                setSearch('');
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [searchOpen]);
 
     const selectedMembers = members.filter(m => selectedIds.includes(m.id));
     const suggestions = members.filter(m =>
@@ -95,7 +97,7 @@ export function CreateTeamModal({ projectId, members, onClose, onCreated }: Crea
                 <div className={styles.header}>
                     <h2 id="create-team-title" className={styles.title}>Criar nova equipe</h2>
                     <button className={styles.closeBtn} onClick={onClose} aria-label="Fechar">
-                        <IconClose />
+                        <CloseIcon />
                     </button>
                 </div>
 
@@ -125,26 +127,42 @@ export function CreateTeamModal({ projectId, members, onClose, onCreated }: Crea
                     <div className={styles.right}>
                         <div className={styles.rightHeader}>
                             <span className={styles.sectionTitle}>Integrantes</span>
-                            <div className={styles.searchWrap}>
-                                <span className={styles.searchIcon}><IconSearch /></span>
-                                <input
-                                    type="text"
-                                    className={styles.searchInput}
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                    placeholder="Buscar integrante"
-                                />
-                                {suggestions.length > 0 && (
-                                    <ul className={styles.suggestions}>
-                                        {suggestions.map(m => (
-                                            <li key={m.id}>
-                                                <button type="button" className={styles.suggestionItem} onClick={() => addMember(m.id)}>
-                                                    <span className={styles.suggestionInitials}>{m.initials}</span>
-                                                    <span>{m.name}</span>
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
+                            <div className={styles.searchWrap} ref={searchWrapRef}>
+                                {!searchOpen ? (
+                                    <button
+                                        type="button"
+                                        className={styles.searchToggle}
+                                        onClick={() => setSearchOpen(true)}
+                                        aria-label="Adicionar integrante"
+                                    >
+                                        <SearchIcon size={13} />
+                                        <span>Adicionar</span>
+                                    </button>
+                                ) : (
+                                    <>
+                                        <span className={styles.searchIcon}><SearchIcon size={13} /></span>
+                                        <input
+                                            type="text"
+                                            className={styles.searchInput}
+                                            value={search}
+                                            onChange={e => setSearch(e.target.value)}
+                                            onKeyDown={e => { if (e.key === 'Escape') { setSearchOpen(false); setSearch(''); } }}
+                                            placeholder="Buscar integrante"
+                                            autoFocus
+                                        />
+                                        {suggestions.length > 0 && (
+                                            <ul className={styles.suggestions}>
+                                                {suggestions.map(m => (
+                                                    <li key={m.id}>
+                                                        <button type="button" className={styles.suggestionItem} onClick={() => addMember(m.id)}>
+                                                            <span className={styles.suggestionInitials}>{m.initials}</span>
+                                                            <span>{m.name}</span>
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>

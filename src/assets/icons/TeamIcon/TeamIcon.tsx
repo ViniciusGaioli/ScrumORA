@@ -1,12 +1,12 @@
-interface SearchIconProps {
+interface TeamIconProps {
     size?: number;
 }
 
-export default function SearchIcon({ size = 16 }: SearchIconProps) {
+export default function TeamIcon({ size = 14 }: TeamIconProps) {
     return (
         <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <rect x="3" y="7" width="13" height="13" rx="2"/>
+            <path d="M8 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12"/>
         </svg>
     );
 }

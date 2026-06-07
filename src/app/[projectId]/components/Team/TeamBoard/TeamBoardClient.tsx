@@ -6,8 +6,9 @@ import {
     PointerSensor, closestCorners, pointerWithin, rectIntersection, useSensor, useSensors,
 } from '@dnd-kit/core';
 import { Member, ProjectTeam } from '../MemberCard/Member';
-import { MemberCard } from '../MemberCard/MemberCard';
+import { MemberCard, MemberMenuAction } from '../MemberCard/MemberCard';
 import { TeamGroup } from '../TeamGroup/TeamGroup';
+import { EditMemberModal } from '../EditMemberModal/EditMemberModal';
 import { groupMembers } from '../../../services/teamService';
 import {
     addMemberToTeam, removeMemberFromTeam,
@@ -55,12 +56,31 @@ interface Props {
 export function TeamBoardClient({ members, teams, canEdit, projectId, onRefresh }: Props) {
     const [localMembers, setLocalMembers] = useState<Member[]>(members);
     const [activeCardId, setActiveCardId] = useState<string | null>(null);
+    const [editTarget, setEditTarget] = useState<{ member: Member; tab: 'edit' | 'remove' } | null>(null);
     const localRef = useRef(localMembers);
     localRef.current = localMembers;
 
+    function handleAction(member: Member, action: MemberMenuAction, groupId: string) {
+        if (action === 'remove-from-team') {
+            const teamId = groupIdToTeamId(groupId);
+            if (teamId === null) return;
+            const token = localStorage.getItem('accessToken');
+            setLocalMembers(prev => prev.map(m =>
+                m.id === member.id ? { ...m, teamIds: m.teamIds.filter(id => id !== teamId) } : m,
+            ));
+            if (token) {
+                removeMemberFromTeam(projectId, teamId, member.id, token)
+                    .then(ok => { if (!ok) onRefresh(); })
+                    .catch(() => onRefresh());
+            }
+            return;
+        }
+        setEditTarget({ member, tab: action === 'remove' ? 'remove' : 'edit' });
+    }
+
     const lastSyncedKey = useRef('');
     useEffect(() => {
-        const key = members.map(m => `${m.id}:${m.teamIds.slice().sort().join(',')}`).sort().join('|');
+        const key = members.map(m => `${m.id}:${m.role}:${m.teamIds.slice().sort().join(',')}`).sort().join('|');
         if (key !== lastSyncedKey.current) {
             setLocalMembers(members);
             lastSyncedKey.current = key;
@@ -154,12 +174,22 @@ export function TeamBoardClient({ members, teams, canEdit, projectId, onRefresh 
         <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className={styles.board}>
                 {groups.map(group => (
-                    <TeamGroup key={group.id} group={group} canEdit={canEdit} />
+                    <TeamGroup key={group.id} group={group} canEdit={canEdit} onActionClick={(m, action, gId) => handleAction(m, action, gId)} />
                 ))}
             </div>
             <DragOverlay dropAnimation={null}>
                 {activeMember && <MemberCard member={activeMember} canEdit={false} />}
             </DragOverlay>
+
+            {editTarget && (
+                <EditMemberModal
+                    member={editTarget.member}
+                    projectId={projectId}
+                    initialTab={editTarget.tab}
+                    onClose={() => setEditTarget(null)}
+                    onSaved={onRefresh}
+                />
+            )}
         </DndContext>
     );
 }
